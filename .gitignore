@@ -1,0 +1,19 @@
+# Secrets. AGENTS.md section 12: never commit .env, credentials or dumps of real data.
+# .env.example is the one exception: it holds placeholders only (section 8.2).
+.env
+.env.*
+!.env.example
+
+# deno.lock is deliberately NOT ignored: it pins the exact dependency versions that section 2 requires.
+node_modules/
+coverage/
+# deno.lock is the only lockfile: an npm one appears when an npm command runs here by mistake.
+package-lock.json
+
+# Claude Code: settings.json is shared, settings.local.json is a personal override.
+.claude/settings.local.json
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store

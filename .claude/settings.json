@@ -1,0 +1,58 @@
+{
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
+  "permissions": {
+    "ask": [
+      "Bash(git push *)",
+      "PowerShell(git push *)",
+      "Bash(gh pr create *)",
+      "PowerShell(gh pr create *)",
+      "Bash(gh pr merge *)",
+      "PowerShell(gh pr merge *)",
+      "Bash(gh pr close *)",
+      "PowerShell(gh pr close *)",
+      "Bash(gh pr comment *)",
+      "PowerShell(gh pr comment *)",
+      "Bash(gh pr review *)",
+      "PowerShell(gh pr review *)",
+      "Bash(git reset *)",
+      "PowerShell(git reset *)",
+      "Bash(git clean *)",
+      "PowerShell(git clean *)",
+      "Bash(git restore *)",
+      "PowerShell(git restore *)",
+      "Bash(git branch *-d*)",
+      "PowerShell(git branch *-d*)",
+      "Bash(git branch *-D*)",
+      "PowerShell(git branch *-D*)",
+      "Bash(git stash drop *)",
+      "PowerShell(git stash drop *)",
+      "Bash(git stash clear *)",
+      "PowerShell(git stash clear *)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(!.env.example)",
+      "Edit(.env)",
+      "Edit(.env.*)",
+      "Edit(!.env.example)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "deno run --allow-run=git,deno .claude/hooks/verify.ts",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  }
+}

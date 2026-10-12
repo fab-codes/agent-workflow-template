@@ -1,0 +1,3 @@
+# deno fmt writes LF and CI checks out LF. Without this, a Windows checkout with core.autocrlf=true turns files
+# into CRLF and `deno task fmt:check` fails on line endings alone.
+* text=auto eol=lf
