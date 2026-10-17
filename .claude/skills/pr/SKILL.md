@@ -47,6 +47,10 @@ Body: `.github/pull_request_template.md`, filled in.
 - **Note**: what the review did not cover, for example the "test validation incomplete" of Windows
   (`CLAUDE.md`, Local environment). Remove the line if there is nothing.
 
+In the body every paragraph and every list item sits on one line, because GitHub renders even a single line break
+of the body as a line break. The lines of the template stay as they are, and so does the Codex stdout inside the
+fence, line breaks included.
+
 ## Publish
 
 1. Write the body to `pr-<n>.md` in the records folder, and show the title and the body.
