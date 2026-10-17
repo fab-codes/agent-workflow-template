@@ -1,123 +1,123 @@
 # CLAUDE.md
 
-Gli standard di ingegneria di questo repository vivono in un unico file, condiviso con tutti gli strumenti AI.
-Leggilo e applicalo integralmente:
+The engineering standards of this repository live in a single file, shared with every AI tool.
+Read it and apply it in full:
 
 @AGENTS.md
 
-Quanto segue vale **in aggiunta** ed è specifico di Claude Code.
+What follows applies **in addition** and is specific to Claude Code.
 
-## Stato del repository
+## Repository status
 
-Questo repository si costruisce incrementalmente, un layer alla volta, dal basso verso l'alto. Prima di intervenire,
-verifica quali layer sono già presenti in `src/` e mantieni il lavoro coerente con il loro stato reale: a che punto
-siamo lo dice il codice, non questa lista.
+This repository is built incrementally, one layer at a time, from the bottom up. Before making changes, check which
+layers already exist in `src/` and keep the work consistent with their actual state: the code says where we are,
+not this list.
 
-<!-- TODO(template): l'ordine di costruzione della prima versione, un passo numerato per layer, dal basso verso
-l'alto. Una decisione ancora aperta si scrive nel passo in cui va chiusa con l'utente, prima del codice che ne
-dipende. -->
+<!-- TODO(template): the build order of the first version, one numbered step per layer, from the bottom up. A
+decision still open is written in the step where it must be settled with the user, before the code that depends
+on it. -->
 
-Ogni passo è una o più PR, con il ciclo di `AGENTS.md` §12.
+Each step is one or more PRs, following the cycle in `AGENTS.md` §12.
 
-## Ambiente locale
+## Local environment
 
-<!-- TODO(template): i servizi locali (per esempio Docker) e come si avviano. -->
+<!-- TODO(template): the local services (for example Docker) and how to start them. -->
 
-- Su Windows la shell primaria è PowerShell 5.1: niente `&&`, niente operatori ternari, niente here-string bash.
-  Per script POSIX usa il tool Bash.
-- La review di Codex (passo 5 di `AGENTS.md` §12) scrive la review su stdout e la trascrizione della sessione su
-  stderr. Nella PR va stdout, integrale; modello ed effort si leggono nell'intestazione di stderr (`model:`,
-  `reasoning effort:`). Su Windows `deno test` va in panic nella sandbox read-only di Codex, e la review chiude
-  con "test validation incomplete": è atteso, i test li coprono `deno task verify` e la CI.
+- On Windows the primary shell is PowerShell 5.1: no `&&`, no ternary operators, no bash here-strings.
+  For POSIX scripts use the Bash tool.
+- The Codex review (step 5 of `AGENTS.md` §12) writes the review to stdout and the session transcript to
+  stderr. The PR gets stdout, in full; model and effort are read from the stderr header (`model:`,
+  `reasoning effort:`). On Windows `deno test` panics inside Codex's read-only sandbox, and the review ends
+  with "test validation incomplete": this is expected, the tests are covered by `deno task verify` and CI.
 
-## Portabilità
+## Portability
 
-Il flusso deve funzionare subito dopo un `git pull` su un altro PC, senza configurazione locale. Comandi, regole e
-controlli stanno nel repository: in `AGENTS.md`, in `.claude/settings.json`, in `deno task verify`. Mai solo in
-`~/.claude` o in `~/.codex`. Al PC restano solo modello ed effort di Claude, che sceglie chi apre la sessione.
+The workflow must work right after a `git pull` on another PC, with no local configuration. Commands, rules and
+checks live in the repository: in `AGENTS.md`, in `.claude/settings.json`, in `deno task verify`. Never only in
+`~/.claude` or in `~/.codex`. The only things left to the PC are Claude's model and effort, chosen by whoever
+opens the session.
 
-La memoria di Claude vale solo su un PC e in un percorso. Un fatto che serve a lavorare sul progetto, come una
-decisione dell'utente o una trappola scoperta, va in questo file o in `AGENTS.md`, non in memoria: se la memoria
-sparisce, non deve rompersi nulla.
+Claude's memory holds on one PC and one path only. A fact needed to work on the project, such as a decision by the
+user or a discovered trap, goes in this file or in `AGENTS.md`, not in memory: if the memory disappears, nothing
+must break.
 
 ## Workflow
 
-1. **Leggere prima di scrivere.** Prima di modificare un file, aprilo. Prima di citare una versione o aggiungere
-   una dipendenza, apri `deno.json`. Prima di usare l'API di una libreria, aprine i `.d.ts`.
-   **Non dedurre firme dalla memoria**: le trappole già scoperte sono in `AGENTS.md` §7.
-2. **Piano prima delle modifiche non banali.** Se il lavoro tocca più di tre file, cambia la struttura delle
-   cartelle o modifica la configurazione, esponi il piano e aspetta conferma.
-3. **Incrementale, mai big bang.** Un layer alla volta, con `deno task check` dopo ogni passo. Non accumulare
-   una riscrittura ampia e non verificata.
-4. **Verificare sempre.** Chiudi ogni task con `deno task verify`, che esegue check, lint, formattazione, test e
-   invarianti di progetto, e riporta l'output reale. Se qualcosa fallisce, dillo esplicitamente: mai arrotondare
-   verso "funziona".
-5. **Seguire il ciclo di una modifica**, in `AGENTS.md` §12: esegui i tuoi passi nell'ordine e fermati a ogni
-   passo che spetta all'utente. L'output della review indipendente si mostra e si riporta nella PR integrale,
-   mai riassunto: è l'unica garanzia che nessuna finding venga filtrata da chi ha scritto il codice.
-   La review indipendente è quella di Codex: `/code-review` e `/security-review` di Claude Code non la
-   sostituiscono, perché il giudizio dello stesso modello che ha scritto il codice è correlato al suo. Si possono
-   aggiungere come controllo in più, mai usare al posto del passo 5.
-6. **Restare nell'ambito.** Fai ciò che è stato chiesto. Refactor collaterali, riordini di file, aggiornamenti
-   di dipendenze e miglioramenti "già che c'ero" si propongono, non si eseguono.
-7. **Niente file di contorno.** Non creare README aggiuntivi, riepiloghi, documentazione `.md` o script di
-   supporto se non richiesti esplicitamente.
-8. **Segnalare i problemi veri.** Se una richiesta è in conflitto con `AGENTS.md` — per esempio rende possibile
-   la violazione di un invariante di §4.1, o aggiunge una capacità fuori scope (§1) — dillo in una frase e
-   proponi l'alternativa, invece di eseguire in silenzio.
+1. **Read before writing.** Before modifying a file, open it. Before citing a version or adding a dependency,
+   open `deno.json`. Before using a library's API, open its `.d.ts` files.
+   **Do not infer signatures from memory**: the traps already discovered are in `AGENTS.md` §7.
+2. **Plan before non-trivial changes.** If the work touches more than three files, changes the folder structure
+   or modifies the configuration, lay out the plan and wait for confirmation.
+3. **Incremental, never big bang.** One layer at a time, with `deno task check` after each step. Do not pile up
+   a large, unverified rewrite.
+4. **Always verify.** Close every task with `deno task verify`, which runs check, lint, formatting, tests and
+   project invariants, and report the actual output. If something fails, say so explicitly: never round up to
+   "it works".
+5. **Follow the cycle of a change**, in `AGENTS.md` §12: carry out your steps in order and stop at every step
+   that belongs to the user. The output of the independent review is shown, and reported in the PR, in full,
+   never summarized: it is the only guarantee that no finding gets filtered out by whoever wrote the code.
+   The independent review is Codex's: Claude Code's `/code-review` and `/security-review` do not replace it,
+   because the judgment of the same model that wrote the code is correlated with it. They can be added as an
+   extra check, never used in place of step 5.
+6. **Stay in scope.** Do what was asked. Collateral refactors, file reshuffles, dependency upgrades and "while
+   I'm at it" improvements are proposed, not carried out.
+7. **No side files.** Do not create extra READMEs, summaries, `.md` documentation or helper scripts unless
+   explicitly asked.
+8. **Flag real problems.** If a request conflicts with `AGENTS.md` — for example it makes a violation of an
+   invariant of §4.1 possible, or adds an out-of-scope capability (§1) — say so in one sentence and propose the
+   alternative, instead of silently going ahead.
 
-## Dati e servizi reali
+## Real data and services
 
-<!-- TODO(template): quali servizi e dati sono reali (database di produzione, account, API a pagamento) e se
-esiste un ambiente di staging. -->
+<!-- TODO(template): which services and data are real (production database, accounts, paid APIs) and whether a
+staging environment exists. -->
 
-- **Non eseguire mai operazioni di scrittura contro servizi o dati reali** di tua iniziativa: né `curl`, né
-  script, né test, né "verifica veloce". Le scritture le decide e le lancia l'utente.
-- I test girano su fake in memoria e senza rete (`AGENTS.md` §9).
-- Se serve una prova end-to-end, prepara il comando, spiega cosa farà e su quali dati, e lascialo eseguire
-  all'utente.
-- In caso di dubbio su un'operazione che modifica dati: fermati e chiedi. Una domanda costa meno di un dato
-  corrotto.
+- **Never run write operations against real services or data** on your own initiative: not with `curl`, not
+  with scripts, not with tests, not as a "quick check". The user decides on and launches writes.
+- Tests run on in-memory fakes and without network (`AGENTS.md` §9).
+- If an end-to-end test is needed, prepare the command, explain what it will do and on which data, and let the
+  user run it.
+- When in doubt about an operation that modifies data: stop and ask. A question costs less than corrupted data.
 
-## Documentazione di riferimento
+## Reference documentation
 
-Quando un'API non è ovvia, consulta la fonte invece di indovinare:
+When an API is not obvious, consult the source instead of guessing:
 
 - Deno runtime — https://docs.deno.com/runtime/
-- Configurazione `deno.json` — https://docs.deno.com/runtime/fundamentals/configuration/
+- `deno.json` configuration — https://docs.deno.com/runtime/fundamentals/configuration/
 - Testing in Deno — https://docs.deno.com/runtime/fundamentals/testing/
 
-<!-- TODO(template): la documentazione delle librerie e dei servizi del progetto. -->
+<!-- TODO(template): the documentation of the project's libraries and services. -->
 
-Per una libreria poco documentata la fonte autorevole non è il web: è il pacchetto pinnato. Leggi i suoi `.d.ts`
-e i suoi sorgenti.
+For a poorly documented library the authoritative source is not the web: it is the pinned package. Read its
+`.d.ts` files and its sources.
 
-Se resta un dubbio reale, chiedi. Un'ipotesi sbagliata costa più di una domanda.
+If a real doubt remains, ask. A wrong assumption costs more than a question.
 
-## Richiede conferma esplicita
+## Requires explicit confirmation
 
-- Installare, rimuovere o aggiornare dipendenze.
-- Modificare `deno.json`, il `Dockerfile` o la configurazione di deploy.
-- Qualsiasi operazione che scriva su servizi o dati reali.
-- Qualsiasi operazione Git che scrive: `commit`, `push`, `merge`, `rebase`, `reset`, creazione di branch o PR.
-- Cancellare file o cartelle.
+- Installing, removing or upgrading dependencies.
+- Modifying `deno.json`, the `Dockerfile` or the deploy configuration.
+- Any operation that writes to real services or data.
+- Any Git operation that writes: `commit`, `push`, `merge`, `rebase`, `reset`, creating a branch or a PR.
+- Deleting files or folders.
 
-<!-- TODO(template): le altre modifiche che richiedono conferma, per esempio cambiare un contratto pubblico. -->
+<!-- TODO(template): the other changes that require confirmation, for example changing a public contract. -->
 
-Una parte di queste regole è imposta anche da `.claude/settings.json`, in ogni modalità di permesso: push,
-operazioni sulle PR, `reset`, `clean`, `restore` e cancellazione di branch o stash mostrano un prompt all'utente.
-Il prompt si aggiunge alla conferma in chat, non la sostituisce. Le regole riconoscono il comando nella forma in
-cui è scritto: i comandi git che scrivono vanno nella forma normale, senza opzioni come `-C` o `-c` prima del
-sottocomando. Per lavorare in un'altra cartella si fa `cd` e poi `git push`, mai `git -C cartella push`.
+Some of these rules are also enforced by `.claude/settings.json`, in every permission mode: push, PR operations,
+`reset`, `clean`, `restore` and deleting branches or stashes show a prompt to the user. The prompt adds to the
+confirmation in chat, it does not replace it. The rules match the command in the form it is written in: git
+commands that write go in the normal form, without options such as `-C` or `-c` before the subcommand. To work in
+another folder, `cd` into it and then `git push`, never `git -C folder push`.
 
-I file `.env` non sono leggibili né modificabili, tranne `.env.example`: il `.env` lo scrive l'utente. Ogni regola
-di shell esiste in coppia, `Bash(...)` e `PowerShell(...)`: su Windows un `deny` su Bash senza la regola
-PowerShell gemella spegne lo strumento PowerShell in silenzio.
+`.env` files are neither readable nor editable, except `.env.example`: the user writes the `.env`. Every shell rule
+comes in a pair, `Bash(...)` and `PowerShell(...)`: on Windows a `deny` on Bash without its twin PowerShell rule
+silently turns off the PowerShell tool.
 
-Il blocco `attribution` di `.claude/settings.json` usa la forma `"commit": "", "pr": "", "sessionUrl": false`.
-La forma breve `"attribution": false` richiede Claude Code 2.1.281: su una versione precedente rende il file non
-valido, e Claude Code ignora un `settings.json` non valido per intero, permessi e Stop hook compresi. Dopo ogni
-modifica al file, `claude doctor` non deve segnalare impostazioni non valide.
+The `attribution` block of `.claude/settings.json` uses the form `"commit": "", "pr": "", "sessionUrl": false`.
+The short form `"attribution": false` requires Claude Code 2.1.281: on an earlier version it makes the file
+invalid, and Claude Code ignores an invalid `settings.json` entirely, permissions and Stop hook included. After
+every change to the file, `claude doctor` must not report invalid settings.
 
-In auto mode il classificatore di Claude Code può bloccare le modifiche a `.claude/settings.json` come
-auto-modifica: per cambiare queste regole l'utente esce da auto mode, e rientra per le prove.
+In auto mode the Claude Code classifier may block changes to `.claude/settings.json` as self-modification: to
+change these rules the user leaves auto mode, and comes back to it for testing.

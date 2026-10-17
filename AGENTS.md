@@ -1,353 +1,351 @@
-# AGENTS.md — <!-- TODO(template): nome del progetto -->
+# AGENTS.md — <!-- TODO(template): project name -->
 
-Standard operativi per chiunque, umano o agente, scriva codice in questo repository.
-Sono vincolanti: in caso di conflitto con abitudini generiche o con il default del modello, vince questo documento.
+Operating standards for anyone, human or agent, who writes code in this repository.
+They are binding: when they conflict with generic habits or with the model's defaults, this document wins.
 
-## 1. Progetto
+## 1. Project
 
-<!-- TODO(template): cosa fa il progetto, in due o tre frasi, e il flusso dei dati tra i suoi componenti. -->
+<!-- TODO(template): what the project does, in two or three sentences, and how data flows between its components. -->
 
-### Priorità non negoziabili, in quest'ordine
+### Non-negotiable priorities, in this order
 
-<!-- TODO(template): adatta l'elenco. La prima voce è ciò che non deve rompersi mai. -->
+<!-- TODO(template): adapt the list. The first item is what must never break. -->
 
-1. **Integrità dei dati dell'utente**
-2. Sicurezza
-3. Correttezza
-4. Semplicità
-5. Manutenibilità
-6. Estendibilità futura
+1. **Integrity of the user's data**
+2. Security
+3. Correctness
+4. Simplicity
+5. Maintainability
+6. Future extensibility
 
-Quando due priorità confliggono vince quella più in alto. Sempre, senza eccezioni discrezionali.
+When two priorities conflict, the higher one wins. Always, with no discretionary exceptions.
 
-### Cosa questo progetto NON è
+### What this project is NOT
 
-<!-- TODO(template): le capacità fuori scope, da rifiutare anche se richieste in modo indiretto. Un elenco
-esplicito ferma le feature "già che c'ero" meglio di un principio generico. -->
+<!-- TODO(template): the out-of-scope capabilities, to be refused even when requested indirectly. An explicit list
+stops "while I'm at it" features better than a generic principle does. -->
 
 ## Code Review Rules
 
-Regole della review indipendente, umana o agente. Il titolo di questa sezione è quello che Codex cerca: non
-rinominarlo. Sta in testa perché Codex legge AGENTS.md solo fino a `project_doc_max_bytes`, 32 KiB di default,
-e tronca il resto in silenzio. Il comando del passo 5 di §12 alza il limite con `-c`, così vale su ogni macchina
-senza configurazione locale, e `deno task invariants` fallisce se il file supera il limite scritto in quel
-comando. Formattazione, lint, typecheck e invarianti meccanici li verifica `deno task verify` in CI: non vanno
-segnalati in review.
+Rules for the independent review, human or agent. Codex looks for the title of this section: do not rename it.
+It sits at the top because Codex reads AGENTS.md only up to `project_doc_max_bytes`, 32 KiB by default, and
+silently truncates the rest. The step 5 command of §12 raises the limit with `-c`, so it applies on every machine
+with no local configuration, and `deno task invariants` fails if the file exceeds the limit written in that
+command. Formatting, lint, typecheck and mechanical invariants are checked by `deno task verify` in CI: they must
+not be reported in review.
 
-Si riportano **solo** finding P0 e P1, ognuna con lo scenario concreto che la rende visibile: input, stato di
-partenza, effetto sui dati. Manutenibilità e stile restano fuori: li copre `/review`
-(`.claude/commands/review.md`).
+Report **only** P0 and P1 findings, each with the concrete scenario that makes it visible: input, starting state,
+effect on the data. Maintainability and style stay out: `/review` covers them (`.claude/commands/review.md`).
 
-Ogni anti-pattern di §13 è almeno **P1**. Sono **P0**, perché un merge con uno di questi perde dati o li espone,
-i casi seguenti, ciascuno con il percorso sicuro da proporre:
+Every anti-pattern in §13 is at least **P1**. The following cases are **P0**, because a merge with any of them
+loses data or exposes it, each with the safe path to propose:
 
-- Un input, anche assurdo, per cui dati dell'utente vengono cancellati, troncati o sovrascritti senza che
-  l'operazione lo chieda (§4.1). Percorso sicuro: un'operazione mirata che lascia identico ciò che non tocca.
-- Segreti, credenziali, token o dati dell'utente in un log, in un errore o in una risposta (§8.3).
-  Percorso sicuro: loggare identificativi e codici di errore, mai contenuti.
-- Un input esterno che raggiunge un layer interno senza passare dalla validazione di confine (§8.1).
-  Percorso sicuro: validare una volta, all'ingresso, e far circolare solo il valore validato.
-- Un'operazione protetta raggiungibile senza autenticazione, o un token confrontato non a tempo costante (§8.1).
+- An input, even an absurd one, for which user data is deleted, truncated or overwritten without the operation
+  asking for it (§4.1). Safe path: a targeted operation that leaves everything it does not touch identical.
+- Secrets, credentials, tokens or user data in a log, an error or a response (§8.3).
+  Safe path: log identifiers and error codes, never contents.
+- An external input that reaches an inner layer without going through boundary validation (§8.1).
+  Safe path: validate once, at the entry point, and pass around only the validated value.
+- A protected operation reachable without authentication, or a token compared in non-constant time (§8.1).
 
-<!-- TODO(template): i P0 specifici del progetto, ciascuno con il paragrafo che viola e il percorso sicuro. -->
+<!-- TODO(template): the project-specific P0s, each with the section it violates and the safe path. -->
 
-Sono inoltre **P1**:
+The following are also **P1**:
 
-- Un'eccezione che può far cadere il processo, o un errore esposto con un codice fuori da §5.3.
-- Una dipendenza nuova, o uno specifier non pinnato in modo esatto (§2).
-- Una trappola documentata in §7 non gestita nel punto in cui §7 dice di gestirla.
-- Un comportamento nuovo, o un bug corretto, senza il test che lo garantisce (§9).
+- An exception that can bring the process down, or an error exposed with a code outside §5.3.
+- A new dependency, or a specifier not pinned exactly (§2).
+- A trap documented in §7 not handled at the point where §7 says to handle it.
+- A new behavior, or a fixed bug, without the test that guarantees it (§9).
 
-<!-- TODO(template): i P1 specifici del progetto. -->
+<!-- TODO(template): the project-specific P1s. -->
 
 ## 2. Stack
 
-| Layer         | Tecnologia                                            |
-| ------------- | ----------------------------------------------------- |
-| Runtime       | Deno 2.9.6                                            |
-| Linguaggio    | TypeScript (incluso in Deno), strict — `deno check` pulito |
-| Test          | `deno test` + `@std/assert`                           |
-| Lint / Format | `deno lint`, `deno fmt` (configurazione in `deno.json`) |
+| Layer         | Technology                                                  |
+| ------------- | ----------------------------------------------------------- |
+| Runtime       | Deno 2.9.6                                                  |
+| Language      | TypeScript (bundled with Deno), strict — clean `deno check` |
+| Test          | `deno test` + `@std/assert`                                 |
+| Lint / Format | `deno lint`, `deno fmt` (configured in `deno.json`)         |
 
-<!-- TODO(template): le altre righe dello stack (framework, persistenza, deploy), con le versioni esatte. -->
+<!-- TODO(template): the other rows of the stack (framework, persistence, deploy), with exact versions. -->
 
-> Le versioni qui sopra sono indicative. **`deno.json` è l'unica fonte autorevole**: leggilo prima di scrivere
-> codice o citare un'API. Non dedurre firme dalla memoria.
+> The versions above are indicative. **`deno.json` is the only authoritative source**: read it before writing
+> code or citing an API. Do not infer signatures from memory.
 
-### Vincoli di dipendenza
+### Dependency constraints
 
-- **Pin esatto, sempre.** Mai `latest`, mai range (`^`, `~`) su specifier `npm:` o `jsr:`. Un minor bump di una
-  dipendenza può cambiare il comportamento del sistema.
-- **Niente dipendenze nuove senza necessità dimostrata.** Prima verifica se lo copre già Deno o la standard
-  library. Ogni pacchetto aggiunto è debito e superficie di attacco.
+- **Exact pin, always.** Never `latest`, never ranges (`^`, `~`) on `npm:` or `jsr:` specifiers. A minor bump of a
+  dependency can change the behavior of the system.
+- **No new dependencies without a demonstrated need.** First check whether Deno or the standard library already
+  covers it. Every added package is debt and attack surface.
 
-<!-- TODO(template): le tecnologie vietate per decisione architetturale, se ce ne sono. -->
+<!-- TODO(template): the technologies banned by architectural decision, if any. -->
 
-## 3. Comandi
+## 3. Commands
 
 ```bash
-deno task check      # deno check su tutto il repository (type-check)
-deno task test       # deno test, senza accesso alla rete
+deno task check      # deno check on the whole repository (type-check)
+deno task test       # deno test, without network access
 deno task lint       # deno lint
 deno task fmt        # deno fmt
-deno task fmt:check  # deno fmt --check, non scrive
-deno task invariants # invarianti architetturali deterministiche
+deno task fmt:check  # deno fmt --check, does not write
+deno task invariants # deterministic architectural invariants
 deno task verify     # check + lint + fmt:check + test + invariants
 ```
 
-<!-- TODO(template): i comandi per avviare il progetto in locale e, se c'è, il build del container. -->
+<!-- TODO(template): the commands to run the project locally and, if there is one, to build the container. -->
 
-**Definition of Done**: una modifica è completa solo quando `deno task verify` passa pulito — quindi
-`deno task check`, `deno task lint`, `deno task fmt:check`, `deno task test` e `deno task invariants` sono
-riusciti — e l'output reale è stato riportato. Nessun "dovrebbe funzionare", nessun arrotondamento verso
-"funziona". Se qualcosa fallisce, si dice esplicitamente.
+**Definition of Done**: a change is complete only when `deno task verify` passes cleanly — meaning
+`deno task check`, `deno task lint`, `deno task fmt:check`, `deno task test` and `deno task invariants` have
+succeeded — and the actual output has been reported. No "it should work", no rounding up to "it works". If
+something fails, say so explicitly.
 
-## 4. Principi
+## 4. Principles
 
-### 4.1 Invarianti del progetto
+### 4.1 Project invariants
 
-Le regole che nessuna modifica può violare, per nessun input. Non sono linee guida: sono invarianti del codice.
+The rules that no change may violate, for any input. They are not guidelines: they are invariants of the code.
 
-<!-- TODO(template): per esempio: nessuna cancellazione implicita; nessun overwrite dell'intero dato quando basta
-una modifica mirata; read-modify-write sempre sulla versione più recente; ciò che l'operazione non tocca esce
-identico. Dove un invariante si verifica senza giudizio, aggiungilo anche a scripts/check-invariants.ts. -->
+<!-- TODO(template): for example: no implicit deletion; no overwriting all of the data when a targeted change is
+enough; read-modify-write always on the latest version; whatever the operation does not touch comes out
+identical. Where an invariant can be checked without judgment, add it to scripts/check-invariants.ts too. -->
 
-Se un'implementazione rende una di queste invarianti anche solo possibile, l'implementazione è sbagliata:
-si cambia il design, non si aggiunge un controllo.
+If an implementation makes a violation of one of these invariants even possible, the implementation is wrong:
+change the design, do not add a check.
 
 ### 4.2 Zero over-engineering
 
-- Scrivi la cosa più semplice che risolve il problema **posto**, non quello immaginato.
-- Niente astrazioni preventive: nessuna factory, wrapper, registry o layer di configurazione finché non esistono
-  **almeno due chiamanti reali**. Unica eccezione consapevole: i confini architetturali dichiarati in §5.1, che
-  non sono astrazioni speculative.
-- Niente cartelle "in anticipo": una cartella nasce quando ha almeno due file che le appartengono davvero.
-- Una funzione di cinque righe usata una volta sola resta inline.
-- Niente caching, pooling o batching senza una misurazione che lo giustifichi.
-- Cancellare codice è un miglioramento. Niente codice morto, niente flag inutilizzati, niente commenti-cimitero.
+- Write the simplest thing that solves the problem **as posed**, not the imagined one.
+- No preemptive abstractions: no factory, wrapper, registry or configuration layer until there are **at least two
+  real callers**. The one deliberate exception: the architectural boundaries declared in §5.1, which are not
+  speculative abstractions.
+- No folders "in advance": a folder is born when it has at least two files that truly belong to it.
+- A five-line function used only once stays inline.
+- No caching, pooling or batching without a measurement that justifies it.
+- Deleting code is an improvement. No dead code, no unused flags, no graveyard comments.
 
-### 4.3 Massima qualità
+### 4.3 Maximum quality
 
-Il codice deve essere production-ready al primo commit. Non esiste "poi lo sistemiamo".
+Code must be production-ready at the first commit. There is no "we'll fix it later".
 
-- Leggibilità prima di ogni cleverness. Vietati one-liner criptici, ternari annidati, side effect nascosti.
-- Nomi espliciti e per esteso, nessuna abbreviazione criptica.
-- Ogni funzione fa **una** cosa. Se serve un commento per spiegare *cosa* fa un blocco, quel blocco va estratto
-  o rinominato.
-- Gestisci sempre errori e casi limite: dato assente, vuoto o malformato, duplicati, caratteri Unicode, input
-  enormi, campi opzionali mancanti. Mai solo l'happy path.
-- Ogni funzione esportata ha tipi espliciti in ingresso e in uscita. Niente tipi inferiti sui confini pubblici.
-- Il codice deve stare in piedi da solo: niente conoscenza implicita richiesta al lettore.
+- Readability before any cleverness. No cryptic one-liners, nested ternaries or hidden side effects.
+- Explicit, spelled-out names, no cryptic abbreviations.
+- Every function does **one** thing. If a block needs a comment to explain *what* it does, that block gets
+  extracted or renamed.
+- Always handle errors and edge cases: missing, empty or malformed data, duplicates, Unicode characters, huge
+  inputs, missing optional fields. Never just the happy path.
+- Every exported function has explicit input and output types. No inferred types on public boundaries.
+- Code must stand on its own: no implicit knowledge required of the reader.
 
-### 4.4 SOLID, con misura
+### 4.4 SOLID, in moderation
 
-- **SRP** — un modulo, una responsabilità.
-- **OCP** — un comportamento si estende senza toccare i chiamanti, dove esiste un caso d'uso reale che lo chiede.
-- **LSP** — le implementazioni di un'interfaccia sono intercambiabili: i test scritti sul fake in memoria restano
-  validi contro l'implementazione reale.
-- **ISP** — un'interfaccia espone solo ciò che serve ai suoi chiamanti. Non è un proxy generico su una libreria.
-- **DIP** — il dominio dipende dalle astrazioni; solo l'adapter dipende dal dettaglio della libreria esterna.
+- **SRP** — one module, one responsibility.
+- **OCP** — a behavior is extended without touching its callers, where a real use case calls for it.
+- **LSP** — implementations of an interface are interchangeable: tests written against the in-memory fake stay
+  valid against the real implementation.
+- **ISP** — an interface exposes only what its callers need. It is not a generic proxy over a library.
+- **DIP** — the domain depends on abstractions; only the adapter depends on the details of the external library.
 
-Non forzare i principi per completezza formale: applicali dove producono un vantaggio reale.
+Do not force the principles for formal completeness: apply them where they bring a real benefit.
 
-## 5. Architettura
+## 5. Architecture
 
-### 5.1 Layer e regola di dipendenza
+### 5.1 Layers and dependency rule
 
-<!-- TODO(template): i layer, dall'alto verso il basso, con il ruolo e la cartella di ciascuno. -->
+<!-- TODO(template): the layers, from top to bottom, with the role and the folder of each. -->
 
-Le dipendenze puntano **in una sola direzione, verso il basso**. Un layer non conosce chi lo chiama.
-Ogni direzione vietata si scrive anche in `LAYER_RULES` di `scripts/check-invariants.ts`, così la verifica
-`deno task verify` invece della memoria di chi scrive.
+Dependencies point **in one direction only, downwards**. A layer does not know who calls it.
+Every forbidden direction is also written in `LAYER_RULES` in `scripts/check-invariants.ts`, so that
+`deno task verify` checks it instead of the writer's memory.
 
-- Una libreria esterna critica si importa da un solo layer, il suo adapter. I suoi tipi e le sue stranezze si
-  normalizzano lì dentro e non ne attraversano il confine (§7).
-- Le implementazioni concrete si costruiscono una sola volta, nel composition root, e si iniettano.
+- A critical external library is imported from a single layer, its adapter. Its types and quirks are normalized
+  in there and do not cross its boundary (§7).
+- Concrete implementations are built once, in the composition root, and injected.
 
-### 5.2 Struttura
+### 5.2 Structure
 
-<!-- TODO(template): l'albero di src/, con un commento per file o cartella. -->
+<!-- TODO(template): the src/ tree, with a comment for each file or folder. -->
 
 ```
-tests/                   # mirror di src/, un file per modulo testato
+tests/                   # mirror of src/, one file per tested module
 ```
 
-Vincoli strutturali:
+Structural constraints:
 
-- **Niente barrel file** `index.ts` / `mod.ts` che ri-esportano. Si importa sempre dal file diretto.
-- Niente `utils.ts` contenitore. Un file per area semantica, con un nome che dice cosa contiene.
+- **No barrel files** `index.ts` / `mod.ts` that re-export. Always import from the file directly.
+- No catch-all `utils.ts`. One file per semantic area, with a name that says what it contains.
 
-### 5.3 Modello di errore
+### 5.3 Error model
 
-Un unico tipo di errore di dominio, con un codice da un'unione chiusa di stringhe:
+A single domain error type, with a code from a closed union of strings:
 
-<!-- TODO(template): l'elenco dei codici di errore. -->
+<!-- TODO(template): the list of error codes. -->
 
-- Gli errori attesi si modellano; non si usano eccezioni generiche per il controllo di flusso.
-- Il messaggio esposto all'esterno è **sanitizzato**: nessun segreto, nessuno stack trace, nessun dettaglio
-  dei servizi interni, nessun dato dell'utente.
-- Lo stack trace si logga server-side solo se non contiene segreti.
-- **Nessuna eccezione deve far cadere il processo.** Ogni handler ha una barriera; le rejection non gestite
-  sono loggate, non fatali.
+- Expected errors are modeled; generic exceptions are not used for control flow.
+- The message exposed to the outside is **sanitized**: no secrets, no stack traces, no details of internal
+  services, no user data.
+- The stack trace is logged server-side only if it contains no secrets.
+- **No exception may bring the process down.** Every handler has a barrier; unhandled rejections are logged, not
+  fatal.
 
-## 6. TypeScript e Deno
+## 6. TypeScript and Deno
 
-- **`any` è vietato.** Per dati non tipizzati: `unknown` più type guard o parsing esplicito.
-  L'unica eccezione tollerata è al confine con una libreria dai tipi incompleti (§7): va isolata in una riga,
-  con un cast motivato da un commento, e non si propaga oltre l'adapter.
-- Niente `@ts-ignore`. `@ts-expect-error` solo con un commento che ne spiega la necessità.
-- `type` per union, intersezioni e shape di dati; `interface` solo per contratti pensati per essere implementati.
-- Niente `enum`: unioni di stringhe oppure oggetti `as const`.
-- `import type { ... }` quando importi solo tipi.
-- Import espliciti con estensione `.ts` per i file locali; specifier `npm:` e `jsr:` pinnati e dichiarati in
-  `deno.json` sotto `imports`, invece che ripetuti inline nei file.
-- **Named export, mai `export default`.**
-- `readonly` sui parametri di configurazione e sulle strutture che non devono mutare. Le funzioni pure prendono
-  un valore e ne restituiscono uno nuovo, non mutano l'input.
-- Permessi Deno minimi ed espliciti nelle task. Mai `-A`.
+- **`any` is forbidden.** For untyped data: `unknown` plus a type guard or explicit parsing.
+  The only tolerated exception is at the boundary with a library with incomplete types (§7): it is isolated on a
+  single line, with a cast justified by a comment, and does not spread beyond the adapter.
+- No `@ts-ignore`. `@ts-expect-error` only with a comment that explains why it is needed.
+- `type` for unions, intersections and data shapes; `interface` only for contracts meant to be implemented.
+- No `enum`: string unions or `as const` objects.
+- `import type { ... }` when you import only types.
+- Explicit imports with the `.ts` extension for local files; `npm:` and `jsr:` specifiers pinned and declared in
+  `deno.json` under `imports`, instead of repeated inline in the files.
+- **Named exports, never `export default`.**
+- `readonly` on configuration parameters and on structures that must not change. Pure functions take a value and
+  return a new one, they do not mutate the input.
+- Minimal, explicit Deno permissions in tasks. Never `-A`.
 
-## 7. Dipendenze critiche
+## 7. Critical dependencies
 
-Una libreria esterna poco documentata o instabile si confina nel suo adapter (§5.1) e si descrive qui: la
-superficie API **verificata** sui suoi `.d.ts` e sui suoi sorgenti, e le trappole già scoperte. Non inventare
-firme: se serve qualcosa che non è qui, apri il pacchetto e verifica prima di scrivere.
+A poorly documented or unstable external library is confined to its adapter (§5.1) and described here: the API
+surface **verified** against its `.d.ts` files and its sources, and the traps already discovered. Do not invent
+signatures: if you need something that is not here, open the package and verify before writing.
 
-<!-- TODO(template): per ogni dipendenza critica: versione pinnata, import validati, metodi utilizzabili con le
-firme reali, trappole verificate (valori di ritorno sorprendenti, metodi stub, metodi distruttivi da non
-chiamare), sequenze di inizializzazione vincolanti. Se il progetto non ne ha, scrivi "Nessuna" e lascia la
-sezione: altri paragrafi la citano. -->
+<!-- TODO(template): for each critical dependency: pinned version, validated imports, usable methods with their
+real signatures, verified traps (surprising return values, stub methods, destructive methods not to call),
+mandatory initialization sequences. If the project has none, write "None" and keep the section: other sections
+cite it. -->
 
-## 8. Sicurezza
+## 8. Security
 
-### 8.1 Confini e input
+### 8.1 Boundaries and input
 
-Ogni input esterno — richiesta, argomento, file, variabile d'ambiente — si valida **una volta sola, al confine**,
-in un modulo dedicato, e produce un valore già sicuro. I layer interni ricevono solo valori validati.
+Every external input — request, argument, file, environment variable — is validated **once, at the boundary**,
+in a dedicated module, and produces a value that is already safe. Inner layers receive only validated values.
 
-- Path: si rifiutano traversal (`../`, `..\`, anche codificato), path assoluti, null byte e caratteri di
-  controllo; separatori e Unicode (NFC) si normalizzano. Ogni caso rifiutato ha il suo test.
-- Autenticazione, se c'è: obbligatoria su ogni endpoint non dichiarato pubblico, con confronto dei token **a
-  tempo costante**. Un `===` su un token è un difetto, non uno stile.
-- Limiti espliciti sulla dimensione dell'input e del risultato, e timeout su ogni chiamata di rete.
+- Paths: traversal (`../`, `..\`, encoded too), absolute paths, null bytes and control characters are rejected;
+  separators and Unicode (NFC) are normalized. Every rejected case has its own test.
+- Authentication, if any: mandatory on every endpoint not declared public, with tokens compared **in constant
+  time**. A `===` on a token is a defect, not a matter of style.
+- Explicit limits on the size of the input and of the result, and a timeout on every network call.
 
-<!-- TODO(template): i confini reali del progetto e cosa si valida su ciascuno. -->
+<!-- TODO(template): the real boundaries of the project and what is validated on each. -->
 
-### 8.2 Segreti e configurazione
+### 8.2 Secrets and configuration
 
-- Tutti i segreti arrivano da environment variables, validate una sola volta all'avvio.
-  Configurazione mancante o incoerente → fallimento immediato e rumoroso, mai un default silenzioso.
-- Default conservativi: in assenza di configurazione esplicita il sistema fa meno, non di più.
-- `.env.example` contiene solo placeholder. Mai un valore reale, mai un frammento di credenziale.
+- All secrets come from environment variables, validated once at startup.
+  Missing or inconsistent configuration → immediate, loud failure, never a silent default.
+- Conservative defaults: without explicit configuration the system does less, not more.
+- `.env.example` contains placeholders only. Never a real value, never a fragment of a credential.
 
 ### 8.3 Logging
 
-Si logga: operazione, timestamp, esito, durata, identificativi sanitizzati, codice di errore.
+What gets logged: operation, timestamp, outcome, duration, sanitized identifiers, error code.
 
-Non si logga mai, per default: dati dell'utente, credenziali, token, URL con credenziali, body delle richieste,
-header di autorizzazione.
+Never logged, by default: user data, credentials, tokens, URLs with credentials, request bodies, authorization
+headers.
 
-Il logger è un modulo dedicato con output strutturato. Niente `console.log` sparsi, e il lint lo impone: un
-`console.log` di un oggetto di dominio è la via più breve per finire dati dell'utente nei log.
+The logger is a dedicated module with structured output. No scattered `console.log`, and lint enforces it: a
+`console.log` of a domain object is the shortest path for user data to end up in the logs.
 
 ## 9. Testing
 
-Si testano le parti deterministiche e quelle pericolose. Il resto si testa se il test aggiunge informazione.
+Test the deterministic parts and the dangerous ones. Test the rest if the test adds information.
 
-Copertura obbligatoria:
+Mandatory coverage:
 
-- validazione degli input al confine, inclusi quelli malformati e ostili
-- ogni invariante di §4.1
+- input validation at the boundary, including malformed and hostile inputs
+- every invariant in §4.1
 
-<!-- TODO(template): le aree del progetto che richiedono un test per ogni caso. -->
+<!-- TODO(template): the areas of the project that require a test for every case. -->
 
-Regole:
+Rules:
 
-- Le dipendenze esterne stanno dietro un'interfaccia con un fake in memoria: il dominio si testa integralmente
-  senza servizi reali.
-- **I test non accedono alla rete.** Il comando di test ha al massimo `--allow-env`, e `deno task invariants`
-  lo verifica: un test non può raggiungere un servizio reale nemmeno per errore.
-- Un test descrive un comportamento osservabile, non l'implementazione. Il nome del test dice cosa garantisce.
-- Ogni bug corretto porta con sé il test che lo avrebbe intercettato.
+- External dependencies sit behind an interface with an in-memory fake: the domain is tested in full without
+  real services.
+- **Tests do not access the network.** The test command has at most `--allow-env`, and `deno task invariants`
+  checks it: a test cannot reach a real service, not even by mistake.
+- A test describes an observable behavior, not the implementation. The test's name says what it guarantees.
+- Every fixed bug comes with the test that would have caught it.
 
 ## 10. Naming
 
-| Cosa                    | Convenzione                              | Esempio                       |
-| ----------------------- | ---------------------------------------- | ----------------------------- |
-| File di modulo          | kebab-case                               | `parse-config.ts`             |
-| File che esporta classe | PascalCase, come la classe               | `OrderService.ts`             |
-| File di test            | kebab-case + `_test.ts`                  | `paths_test.ts`               |
-| Classi e tipi           | PascalCase, senza prefisso `I`           | `OrderRepository`, `Order`    |
-| Funzioni e variabili    | camelCase                                | `normalizePath`               |
-| Costanti di modulo      | UPPER_SNAKE_CASE                         | `MAX_REQUEST_SIZE`            |
-| Env vars                | UPPER_SNAKE_CASE                         | `AUTH_TOKEN`                  |
-| Booleani                | prefisso `is` / `has` / `can` / `should` | `isWritable`, `hasSection`    |
+| What                    | Convention                             | Example                    |
+| ----------------------- | -------------------------------------- | -------------------------- |
+| Module file             | kebab-case                             | `parse-config.ts`          |
+| File exporting a class  | PascalCase, like the class             | `OrderService.ts`          |
+| Test file               | kebab-case + `_test.ts`                | `paths_test.ts`            |
+| Classes and types       | PascalCase, no `I` prefix              | `OrderRepository`, `Order` |
+| Functions and variables | camelCase                              | `normalizePath`            |
+| Module constants        | UPPER_SNAKE_CASE                       | `MAX_REQUEST_SIZE`         |
+| Env vars                | UPPER_SNAKE_CASE                       | `AUTH_TOKEN`               |
+| Booleans                | `is` / `has` / `can` / `should` prefix | `isWritable`, `hasSection` |
 
-## 11. Lingua
+## 11. Language
 
-- **Codice in inglese**: identificatori, tipi, nomi dei file, codici di errore, messaggi di commit.
-- **Commenti in inglese**, solo dove servono, rigorosamente concisi. Un commento spiega il **perché** di una scelta
-  non ovvia, un vincolo esterno o un workaround. Mai il *cosa*: quello lo dice il codice.
-  I punti che meritano un commento sono le trappole delle dipendenze (§7) e le decisioni di sicurezza.
-  Vietati i blocchi decorativi, i banner di sezione e i JSDoc che riformulano la firma.
-- Documentazione di progetto (`README.md`, questo file) in italiano.
+- **Code in English**: identifiers, types, file names, error codes, commit messages.
+- **Comments in English**, only where needed, strictly concise. A comment explains the **why** of a non-obvious
+  choice, an external constraint or a workaround. Never the *what*: the code says that.
+  The places that deserve a comment are the traps of dependencies (§7) and security decisions.
+  No decorative blocks, section banners or JSDoc that restates the signature.
+- Project documentation (`README.md`, this file) in English.
 
-## 12. Ciclo di sviluppo e Git
+## 12. Development cycle and Git
 
-### Ciclo di una modifica
+### Cycle of a change
 
-1. Utente: chiede la modifica. Claude: se non è banale, propone il piano e aspetta l'ok.
-2. Claude: scrive codice e test. Lo Stop hook esegue `deno task verify` a fine turno.
-3. Claude: con `verify` verde, esegue `/review` e mostra il report.
-4. Utente: approva il commit. Claude: committa.
-5. Claude: esegue `git fetch origin` e
+1. User: asks for the change. Claude: if it is not trivial, proposes the plan and waits for the go-ahead.
+2. Claude: writes code and tests. The Stop hook runs `deno task verify` at the end of the turn.
+3. Claude: with `verify` green, runs `/review` and shows the report.
+4. User: approves the commit. Claude: commits.
+5. Claude: runs `git fetch origin` and
    `codex review -c project_doc_max_bytes=65536 -c model_reasoning_effort=xhigh --base origin/develop`,
-   e mostra l'output integrale.
-6. Claude: per ogni finding P0/P1 scrive il test che la riproduce e poi la correzione, oppure motiva perché
-   la respingerebbe; decide l'utente. Se il codice cambia, nuovo commit e si torna al passo 5: un esito vale
-   solo per lo SHA che ha visto.
-7. Claude: con l'ok dell'utente, push e PR verso `develop`, con la sezione **Review** compilata.
-8. Utente: con la CI verde, mergia.
+   and shows the full output.
+6. Claude: for each P0/P1 finding, writes the test that reproduces it and then the fix, or explains why it would
+   reject it; the user decides. If the code changes, new commit and back to step 5: an outcome holds only for
+   the SHA it saw.
+7. Claude: with the user's go-ahead, push and PR to `develop`, with the **Review** section filled in.
+8. User: with CI green, merges.
 
-Il comando del passo 5 è fisso, senza istruzioni aggiuntive: chi ha scritto il codice non sceglie cosa guarda
-il revisore. I due `-c` non sono istruzioni: il primo fa leggere a Codex questo file per intero (Code Review
-Rules), il secondo fissa l'effort, che senza configurazione locale sarebbe il default del modello, anche `low`.
-Il modello resta il default del CLI installato: un nome scritto qui invecchierebbe. La base è `origin/develop`
-perché il `develop` locale resta indietro dopo ogni merge fatto su GitHub, e la review includerebbe codice di
-altre PR.
+The step 5 command is fixed, with no additional instructions: whoever wrote the code does not choose what the
+reviewer looks at. The two `-c` are not instructions: the first makes Codex read this file in full (Code Review
+Rules), the second pins the effort, which without local configuration would be the model's default, even `low`.
+The model stays the default of the installed CLI: a name written here would go stale. The base is
+`origin/develop` because the local `develop` falls behind after every merge done on GitHub, and the review would
+include code from other PRs.
 
-### Regole
+### Rules
 
-- Branch: `feat/<numero>-<breve-descrizione>` o `fix/<numero>-<breve-descrizione>`, dove il numero è
-  progressivo e coincide con quello della PR: `feat/5-startup-config`.
-- Titolo della PR: `<numero> - <descrizione in inglese>`, con lo stesso numero del branch:
-  `5 - Startup configuration validation`. Nessun prefisso Conventional Commits nel titolo:
-  quello vive nei messaggi di commit.
-- Flusso: branch → PR verso `develop` → PR `develop` → `main`. Nessun push diretto su `develop` o `main`:
-  ogni modifica passa da una PR, così CI e review indipendente la vedono prima del merge.
-- Il corpo della PR ha una sezione **Review**: lo SHA dell'ultima review, il modello e l'effort che l'hanno
-  eseguita, il suo output integrale e l'esito di ogni finding P0/P1 emersa nel ciclo. Una finding accolta si
-  chiude con il test che la riproduce e poi la correzione; una respinta, con la motivazione. Lo schema è in
+- Branch: `feat/<number>-<short-description>` or `fix/<number>-<short-description>`, where the number is
+  sequential and matches the PR's: `feat/5-startup-config`.
+- PR title: `<number> - <description in English>`, with the same number as the branch:
+  `5 - Startup configuration validation`. No Conventional Commits prefix in the title:
+  that lives in the commit messages.
+- Flow: branch → PR to `develop` → PR `develop` → `main`. No direct push to `develop` or `main`:
+  every change goes through a PR, so CI and the independent review see it before the merge.
+- The PR body has a **Review** section: the SHA of the last review, the model and effort that ran it, its full
+  output and the outcome of every P0/P1 finding raised during the cycle. An accepted finding is closed with the
+  test that reproduces it and then the fix; a rejected one, with the reason. The template is in
   `.github/pull_request_template.md`.
-- Una PR si mergia solo con la CI verde e con ogni finding P0/P1 chiusa nella sezione **Review**. GitHub non lo
-  impone: il gate è questa regola.
-- Messaggi di commit in inglese, Conventional Commits: `feat:`, `fix:`, `refactor:`, `perf:`, `docs:`, `test:`, `chore:`.
-- Un commit corrisponde a un cambiamento coerente. Niente commit-valanga che mescolano refactor e feature.
-- **Non committare, non pushare e non aprire PR se non esplicitamente richiesto.** Prepara il lavoro nel working
-  tree e fermati.
-- Mai committare `.env`, credenziali o dump di dati reali.
-- **Mai trailer di attribuzione ad AI** nei messaggi di commit o nei corpi delle PR.
+- A PR is merged only with CI green and every P0/P1 finding closed in the **Review** section. GitHub does not
+  enforce it: this rule is the gate.
+- Commit messages in English, Conventional Commits: `feat:`, `fix:`, `refactor:`, `perf:`, `docs:`, `test:`, `chore:`.
+- One commit is one coherent change. No avalanche commits mixing refactoring and features.
+- **Do not commit, push or open PRs unless explicitly asked.** Prepare the work in the working tree and stop.
+- Never commit `.env`, credentials or dumps of real data.
+- **No AI attribution trailers, ever**, in commit messages or PR bodies.
 
-## 13. Anti-pattern — motivo di rifiuto in review
+## 13. Anti-patterns — grounds for rejection in review
 
-- Qualunque percorso che possa cancellare, troncare o sovrascrivere dati dell'utente senza che l'operazione lo chieda.
-- Una libreria critica importata fuori dal suo adapter, o un suo tipo che ne attraversa il confine (§5.1, §7).
-- `any`, `@ts-ignore`, o cast al confine di una libreria senza commento.
-- Input esterno usato senza passare dalla validazione di confine (§8.1).
-- Confronto di un token con `===`.
-- Dati dell'utente, segreti o credenziali in un log o in un messaggio d'errore.
-- Logica di dominio nel layer di trasporto, o dettagli di una libreria nel dominio.
-- Astrazioni premature, barrel file, `utils.ts` come discarica, cartelle vuote.
-- Feature fuori scope aggiunte "già che c'ero" (§1).
-- Dichiarare un lavoro "fatto" senza aver eseguito `deno task verify`.
+- Any path that can delete, truncate or overwrite user data without the operation asking for it.
+- A critical library imported outside its adapter, or one of its types crossing that boundary (§5.1, §7).
+- `any`, `@ts-ignore`, or a cast at a library boundary without a comment.
+- External input used without going through boundary validation (§8.1).
+- Comparing a token with `===`.
+- User data, secrets or credentials in a log or an error message.
+- Domain logic in the transport layer, or library details in the domain.
+- Premature abstractions, barrel files, `utils.ts` as a dumping ground, empty folders.
+- Out-of-scope features added "while I'm at it" (§1).
+- Declaring work "done" without having run `deno task verify`.
 
-<!-- TODO(template): gli anti-pattern specifici del progetto. -->
+<!-- TODO(template): the project-specific anti-patterns. -->

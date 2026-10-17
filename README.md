@@ -1,66 +1,66 @@
 # agent-workflow-template
 
-Scheletro di repository per sviluppare con Claude Code e Codex. Claude scrive il codice, `deno task verify`
-controlla tutto ciò che non richiede giudizio, `/review` guarda la manutenibilità, e Codex, un altro modello, fa
-la review indipendente di correttezza e sicurezza prima di ogni PR. Il ciclo completo è in
+A repository skeleton for developing with Claude Code and Codex. Claude writes the code, `deno task verify`
+checks everything that needs no judgment, `/review` looks at maintainability, and Codex, a different model, does
+the independent correctness and security review before every PR. The full cycle is in
 [`docs/workflow.md`](docs/workflow.md).
 
-## Requisiti
+## Requirements
 
-Deno 2.9.6, Claude Code, Codex CLI e `gh`, installati e autenticati.
+Deno 2.9.6, Claude Code, Codex CLI and `gh`, installed and authenticated.
 
-## Pubblicare il template
+## Publishing the template
 
-Una volta sola, dopo aver creato il repository su GitHub, lo si segna come template:
+Once, after creating the repository on GitHub, mark it as a template:
 
 ```bash
 gh repo edit <owner>/agent-workflow-template --template
 ```
 
-## Nuovo progetto
+## New project
 
-1. Crea il repository dal template. Un `git clone` porterebbe con sé la storia e il remote del template; così
-   si parte da un commit pulito:
+1. Create the repository from the template. A `git clone` would carry along the template's history and remote;
+   this way you start from a clean commit:
 
    ```bash
-   gh repo create <nome> --private --template <owner>/agent-workflow-template --clone
+   gh repo create <name> --private --template <owner>/agent-workflow-template --clone
    ```
 
-2. Crea `develop` e pubblicalo: il passo 5 fa la review contro `origin/develop`, e le PR puntano lì.
+2. Create `develop` and publish it: step 5 reviews against `origin/develop`, and PRs target it.
 
    ```bash
    git switch -c develop
    git push -u origin develop
    ```
 
-3. Compila i segnaposto, partendo da `AGENTS.md` §1. Ognuno dice cosa scrivere; quando la ricerca trova solo
-   questo README, il template è adattato.
+3. Fill in the placeholders, starting from `AGENTS.md` §1. Each one says what to write; when the search finds
+   only this README, the template is adapted.
 
    ```bash
    git grep -n "TODO(template)"
    ```
 
-4. Sostituisci questo README con quello del progetto.
-5. Esegui `deno task verify`: deve passare prima della prima PR.
+4. Replace this README with the project's own.
+5. Run `deno task verify`: it must pass before the first PR.
 
-## Cosa contiene
+## What it contains
 
-| File                                                     | Stato                                                      |
-| -------------------------------------------------------- | ---------------------------------------------------------- |
-| `AGENTS.md`, `CLAUDE.md`                                 | Regole generiche più segnaposto da compilare               |
-| `scripts/check-invariants.ts`                            | Invarianti generici; quelli del progetto si aggiungono qui |
-| `.claude/settings.json`, `.claude/hooks/verify.ts`       | Pronti: permessi, attribuzione, Stop hook                  |
-| `.claude/commands/review.md`                             | Pronto: `/review`, le tre lenti di manutenibilità          |
-| `.github/workflows/ci.yml`, `.github/pull_request_template.md` | Pronti: CI e sezione Review della PR                 |
-| `deno.json`, `.gitattributes`, `.gitignore`, `tests/`    | Pronti; `deno.json` si estende con le dipendenze del progetto |
-| `docs/workflow.md`                                       | Pronto: il ciclo in una pagina                             |
+| File                                                           | Status                                                   |
+| -------------------------------------------------------------- | -------------------------------------------------------- |
+| `AGENTS.md`, `CLAUDE.md`                                       | Generic rules plus placeholders to fill in               |
+| `scripts/check-invariants.ts`                                  | Generic invariants; the project's own are added here     |
+| `.claude/settings.json`, `.claude/hooks/verify.ts`             | Ready: permissions, attribution, Stop hook               |
+| `.claude/commands/review.md`                                   | Ready: `/review`, the three maintainability lenses       |
+| `.github/workflows/ci.yml`, `.github/pull_request_template.md` | Ready: CI and the PR's Review section                    |
+| `deno.json`, `.gitattributes`, `.gitignore`, `tests/`          | Ready; `deno.json` grows with the project's dependencies |
+| `docs/workflow.md`                                             | Ready: the cycle on one page                             |
 
-## Se il progetto non usa Deno
+## If the project does not use Deno
 
-Il template presuppone Deno, che resta comunque necessario allo Stop hook e allo script degli invarianti. Con un
-altro stack cambiano:
+The template assumes Deno, which the Stop hook and the invariants script need anyway. With another stack, these
+change:
 
-- il comando lanciato da `.claude/hooks/verify.ts` e il suo elenco `RELEVANT_PATHS`;
-- il passo `Verify` di `.github/workflows/ci.yml`;
-- §2, §3, §6 e §9 di `AGENTS.md`;
-- il controllo sul comando di test in `scripts/check-invariants.ts`, che lo legge da `deno.json`.
+- the command run by `.claude/hooks/verify.ts` and its `RELEVANT_PATHS` list;
+- the `Verify` step of `.github/workflows/ci.yml`;
+- §2, §3, §6 and §9 of `AGENTS.md`;
+- the check on the test command in `scripts/check-invariants.ts`, which reads it from `deno.json`.

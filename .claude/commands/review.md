@@ -1,87 +1,86 @@
 ---
-description: Review di manutenibilità contro AGENTS.md — over-engineering, coerenza, commenti
-argument-hint: [path o riferimento git — default: modifiche non committate]
+description: Maintainability review against AGENTS.md — over-engineering, consistency, comments
+argument-hint: [path or git ref — default: uncommitted changes]
 ---
 
 # Review
 
-Target: **$ARGUMENTS** — se vuoto, le modifiche non committate (`git status --porcelain` e `git diff`).
+Target: **$ARGUMENTS** — if empty, the uncommitted changes (`git status --porcelain` and `git diff`).
 
-Questa è una **lettura**, non un intervento: produci un report, non modificare i file. Le correzioni le decide
-l'utente dopo aver visto le findings.
+This is a **reading**, not an intervention: produce a report, do not modify files. The user decides on the fixes
+after seeing the findings.
 
-## Prima di guardare il codice
+## Before looking at the code
 
-1. Esegui `deno task lint` e `deno task invariants`. Coprono la parte meccanica
-   di `AGENTS.md` §13. **Non ridurre a mano ciò che loro già segnalano**: il loro esito va nel report come
-   riga di stato, non come tua finding.
-2. `AGENTS.md` è la fonte di verità. Citalo per paragrafo (`§4.2`) invece di riassumerlo: se ti trovi a
-   riscrivere una regola qui, la regola sta già altrove e il tuo compito è applicarla, non ripeterla.
-3. **Apri i file, non fidarti del diff.** Una violazione di coerenza è invisibile in un diff: si vede solo
-   confrontando il file nuovo con i file vicini che fanno la stessa cosa.
+1. Run `deno task lint` and `deno task invariants`. They cover the mechanical part
+   of `AGENTS.md` §13. **Do not redo by hand what they already flag**: their outcome goes into the report as a
+   status line, not as your finding.
+2. `AGENTS.md` is the source of truth. Cite it by section (`§4.2`) instead of summarizing it: if you find yourself
+   rewriting a rule here, the rule already lives elsewhere and your job is to apply it, not to repeat it.
+3. **Open the files, do not trust the diff.** A consistency violation is invisible in a diff: it shows only when
+   you compare the new file with the neighboring files that do the same thing.
 
-## Ambito
+## Scope
 
-Questa review guarda la manutenibilità. Correttezza e sicurezza, cioè le voci P0 e P1 di **Code Review Rules**
-in `AGENTS.md`, le giudica la review indipendente (§12), su un altro modello: ripeterle qui produrrebbe due
-giudizi correlati contati come due controlli indipendenti. Se mentre leggi trovi comunque un problema di quel
-tipo, non tacerlo: mettilo in cima al report. Ma non andarlo a cercare.
+This review looks at maintainability. Correctness and security, that is the P0 and P1 items of **Code Review
+Rules** in `AGENTS.md`, are judged by the independent review (§12), on a different model: repeating them here
+would produce two correlated judgments counted as two independent checks. If while reading you still come across
+a problem of that kind, do not keep quiet about it: put it at the top of the report. But do not go looking for it.
 
-## Le lenti
+## The lenses
 
-### Lente 1 — Over-engineering (§4.2)
+### Lens 1 — Over-engineering (§4.2)
 
-Domanda, per ogni astrazione: _quanti chiamanti reali ha, adesso?_ Contali con grep, non a intuito. Meno di
-due chiamanti → va inlinata. Le uniche eccezioni sono i confini architetturali dichiarati in §5.1.
+Question, for each abstraction: _how many real callers does it have, right now?_ Count them with grep, not by
+intuition. Fewer than two callers → it gets inlined. The only exceptions are the architectural boundaries
+declared in §5.1.
 
-Segnali: factory, wrapper, registry, layer di configurazione; una cartella con un solo file; una funzione di
-cinque righe usata una volta sola; caching, pooling o batching senza una misura che li giustifichi; parametri
-opzionali che nessun chiamante passa; flag mai letti; codice morto; generalizzazione per un secondo caso d'uso
-che non esiste ancora.
+Signals: factories, wrappers, registries, configuration layers; a folder with a single file; a five-line function
+used only once; caching, pooling or batching without a measurement that justifies them; optional parameters that
+no caller passes; flags never read; dead code; generalization for a second use case that does not exist yet.
 
-### Lente 2 — Coerenza con la codebase (§5, §6, §10)
+### Lens 2 — Consistency with the codebase (§5, §6, §10)
 
-Il metro non è un ideale astratto: sono i file che esistono già. Scegli due o tre file fratelli — stesso
-layer, stesso ruolo — e confronta.
+The yardstick is not an abstract ideal: it is the files that already exist. Pick two or three sibling files —
+same layer, same role — and compare.
 
-Domanda: _un lettore capirebbe che questo file e quelli accanto sono stati scritti dalla stessa mano?_
+Question: _would a reader understand that this file and the ones next to it were written by the same hand?_
 
-Segnali: direzione delle dipendenze invertita rispetto a §5.1; un errore gestito in una forma diversa dal
-modello di dominio unico di §5.3; naming fuori dalla tabella §10; `type` dove i vicini usano `interface` o
-viceversa; import senza estensione `.ts`, o senza `import type` quando importa solo tipi; struttura dei test
-diversa da quella degli altri file di test; un tipo che attraversa un confine che gli altri rispettano.
+Signals: dependency direction inverted with respect to §5.1; an error handled in a form different from the single
+domain error model of §5.3; naming outside the table in §10; `type` where the neighbors use `interface` or vice
+versa; imports without the `.ts` extension, or without `import type` when importing only types; a test structure
+different from that of the other test files; a type crossing a boundary that the others respect.
 
-### Lente 3 — Commenti (§11, §4.3)
+### Lens 3 — Comments (§11, §4.3)
 
-Domanda, per ogni commento: _dice COSA fa il codice, o PERCHÉ è fatto così?_
+Question, for each comment: _does it say WHAT the code does, or WHY it is done this way?_
 
-Il **cosa** va cancellato: se serve a capire il blocco, il problema è il nome o la lunghezza del blocco, e la
-finding è quella. Il **perché** resta, se è vero.
+The **what** gets deleted: if it is needed to understand the block, the problem is the block's name or length,
+and that is the finding. The **why** stays, if it is true.
 
-Segnali di troppo: JSDoc che riformula la firma; banner decorativi e separatori di sezione; codice commentato;
-commenti che descrivono una versione precedente del codice e ora mentono; traduzioni in prosa di una riga
-ovvia.
+Signals of too much: JSDoc that restates the signature; decorative banners and section separators; commented-out
+code; comments that describe a previous version of the code and now lie; prose translations of an obvious line.
 
-Segnali di troppo poco — contano quanto i precedenti: una trappola di una dipendenza critica usata senza la nota
-che la spiega (§7), una decisione di sicurezza senza il motivo, un cast al confine di una libreria senza il
-commento che lo motiva (§6).
+Signals of too little — they count as much as the previous ones: a trap of a critical dependency used without the
+note that explains it (§7), a security decision without its reason, a cast at a library boundary without the
+comment that justifies it (§6).
 
 ## Report
 
-Per ogni finding, in quest'ordine di gravità:
+For each finding, ordered by severity:
 
-- `file.ts:riga` — il paragrafo di `AGENTS.md` violato — cosa non va, in una frase
-- perché è un problema **qui**, con lo scenario concreto che lo rende visibile
-- la correzione proposta, in una riga
+- `file.ts:line` — the section of `AGENTS.md` it violates — what is wrong, in one sentence
+- why it is a problem **here**, with the concrete scenario that makes it visible
+- the proposed fix, in one line
 
-Chiudi con lo stato di `deno task lint` e dello script invarianti.
+Close with the status of `deno task lint` and of the invariants script.
 
-**Se non trovi nulla, dillo.** Un report vuoto è un esito valido e frequente su codice scritto seguendo
-`AGENTS.md`. Riempirlo di osservazioni marginali per non consegnarlo vuoto è il modo più veloce per rendere
-questo comando inutile.
+**If you find nothing, say so.** An empty report is a valid and frequent outcome on code written following
+`AGENTS.md`. Padding it with marginal remarks so as not to hand it in empty is the fastest way to make this
+command useless.
 
-## Cosa non riportare
+## What not to report
 
-Preferenze stilistiche non scritte in `AGENTS.md`; qualsiasi cosa già coperta da `deno fmt` o `deno lint`;
-riscritture generiche non legate a una regola del progetto; proposte di feature — anche buone, anche piccole:
-sono fuori scope per §4.2 e vanno chieste all'utente, non infilate in una review.
+Stylistic preferences not written in `AGENTS.md`; anything already covered by `deno fmt` or `deno lint`; generic
+rewrites not tied to a project rule; feature proposals — even good ones, even small ones: they are out of scope
+under §4.2 and must be asked of the user, not slipped into a review.
