@@ -121,7 +121,7 @@ step 5: they can be added, never used in place of Codex.
 | `CLAUDE.md`                                | Claude Code                                  | Build order, workflow, real data, portability                        |
 | `.claude/settings.json`                    | Claude Code (harness)                        | Permissions, attribution, Stop hook                                  |
 | `.claude/hooks/verify.ts`                  | Claude Code, at the end of the turn          | Runs `deno task verify` if relevant files changed                    |
-| `.claude/commands/review.md`               | Claude Code, on `/review`                    | The three lenses of the maintainability review                       |
+| `.claude/skills/review/SKILL.md`           | Claude Code, on `/review`                    | The three lenses of the maintainability review                       |
 | `deno.json`, `scripts/check-invariants.ts` | `deno task verify`                           | The Definition of Done and the invariants                            |
 | `.github/workflows/ci.yml`                 | GitHub Actions                               | `deno task verify` on every PR and on every push to `main`/`develop` |
 | `.github/pull_request_template.md`         | GitHub, when the PR is opened                | The layout of the Review section                                     |

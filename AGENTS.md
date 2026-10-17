@@ -35,7 +35,7 @@ command. Formatting, lint, typecheck and mechanical invariants are checked by `d
 not be reported in review.
 
 Report **only** P0 and P1 findings, each with the concrete scenario that makes it visible: input, starting state,
-effect on the data. Maintainability and style stay out: `/review` covers them (`.claude/commands/review.md`).
+effect on the data. Maintainability and style stay out: `/review` covers them (`.claude/skills/review/SKILL.md`).
 
 Every anti-pattern in §13 is at least **P1**. The following cases are **P0**, because a merge with any of them
 loses data or exposes it, each with the safe path to propose:

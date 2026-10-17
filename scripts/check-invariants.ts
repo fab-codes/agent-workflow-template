@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-console -- this is a developer-facing CLI script, not application code.
 
 // Deterministic checks for the AGENTS.md invariants that require no judgment.
-// Judgment-based review lives in AGENTS.md under "Code Review Rules" and in .claude/commands/review.md;
+// Judgment-based review lives in AGENTS.md under "Code Review Rules" and in .claude/skills/review/SKILL.md;
 // style rules live in deno.json under "lint".
 // Nothing is duplicated across the three: a rule enforced by deno lint is deliberately absent here.
 // TODO(template): add the project's own invariants, each tied to the AGENTS.md section it enforces.
