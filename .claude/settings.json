@@ -10,6 +10,8 @@
       "PowerShell(git push *)",
       "Bash(gh pr create *)",
       "PowerShell(gh pr create *)",
+      "Bash(gh pr edit *)",
+      "PowerShell(gh pr edit *)",
       "Bash(gh pr merge *)",
       "PowerShell(gh pr merge *)",
       "Bash(gh pr close *)",

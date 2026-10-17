@@ -50,7 +50,9 @@ gh repo edit <owner>/agent-workflow-template --template
 | `AGENTS.md`, `CLAUDE.md`                                       | Generic rules plus placeholders to fill in               |
 | `scripts/check-invariants.ts`                                  | Generic invariants; the project's own are added here     |
 | `.claude/settings.json`, `.claude/hooks/verify.ts`             | Ready: permissions, attribution, Stop hook               |
-| `.claude/commands/review.md`                                   | Ready: `/review`, the three maintainability lenses       |
+| `.claude/skills/review/SKILL.md`                               | Ready: `/review`, the three maintainability lenses       |
+| `.claude/skills/codex-review/SKILL.md`                         | Ready: `/codex-review`, the Codex review and its record  |
+| `.claude/skills/pr/SKILL.md`                                   | Ready: `/pr`, push and PR with the Review section        |
 | `.github/workflows/ci.yml`, `.github/pull_request_template.md` | Ready: CI and the PR's Review section                    |
 | `deno.json`, `.gitattributes`, `.gitignore`, `tests/`          | Ready; `deno.json` grows with the project's dependencies |
 | `docs/workflow.md`                                             | Ready: the cycle on one page                             |
