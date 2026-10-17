@@ -42,6 +42,15 @@ gh repo edit <owner>/agent-workflow-template --template
 
 4. Replace this README with the project's own.
 5. Run `deno task verify`: it must pass before the first PR.
+6. Optional: a ruleset on `develop` that requires the checks `verify` and `reviewed-sha`, the jobs of `ci.yml`
+   and `reviewed-sha.yml`. Without it a red check is visible, but it does not block the merge. Rulesets are
+   available in public repositories on every plan, GitHub Free included, and in private ones with GitHub Pro,
+   GitHub Team and GitHub Enterprise Cloud. Once both checks have passed on a first PR:
+
+   - **Settings** → **Rulesets** → **New ruleset** → **New branch ruleset**, enforcement status **Active**;
+   - under "Target branches", **Add a target** with the pattern `develop`;
+   - **Require status checks before merging**: add `verify` and `reviewed-sha`, each with the **+** button;
+   - **Create**.
 
 ## What it contains
 
