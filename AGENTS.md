@@ -298,13 +298,13 @@ Rules:
 2. Claude: writes code and tests. The Stop hook runs `deno task verify` at the end of the turn.
 3. Claude: with `verify` green, runs `/review` and shows the report.
 4. User: approves the commit. Claude: commits.
-5. Claude: runs `git fetch origin` and
+5. Claude: runs `/codex-review`, which runs `git fetch origin` and
    `codex review -c project_doc_max_bytes=65536 -c model_reasoning_effort=xhigh --base origin/develop`,
    and shows the full output.
 6. Claude: for each P0/P1 finding, writes the test that reproduces it and then the fix, or explains why it would
    reject it; the user decides. If the code changes, new commit and back to step 5: an outcome holds only for
    the SHA it saw.
-7. Claude: with the user's go-ahead, push and PR to `develop`, with the **Review** section filled in.
+7. User: runs `/pr`. Claude: push and PR to `develop`, with the **Review** section filled in.
 8. User: with CI green, merges.
 
 The step 5 command is fixed, with no additional instructions: whoever wrote the code does not choose what the
