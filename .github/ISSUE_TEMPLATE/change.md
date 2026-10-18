@@ -20,3 +20,7 @@ about: One change, worked as one branch and one PR
 ## Out of scope
 
 <!-- What this change deliberately leaves out, or "Nothing". -->
+
+## Blocked by
+
+<!-- The issues that must be closed as completed before this one starts, one #<n> per item, or "Nothing" (AGENTS.md §12, Rules). -->

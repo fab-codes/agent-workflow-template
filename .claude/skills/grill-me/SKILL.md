@@ -68,8 +68,8 @@ The session ends when the frontier is empty: every branch of the tree visited, n
 write the summary in the sections of `.github/ISSUE_TEMPLATE/change.md`, each as its comment describes, in the
 language of the conversation: `/issue` writes the issue in English (§11).
 
-If the summary holds independent changes, say so and propose how to split them: one issue is one branch and one
-PR (§12, Rules).
+If the change splits, say so and propose the breakdown, by the rules in the Split section of
+`.claude/skills/issue/SKILL.md`: one issue is one branch and one PR (§12, Rules).
 
 Wait for the user to confirm that the summary is the shared understanding, and do not act on it: the next step,
 `/issue`, is the user's.

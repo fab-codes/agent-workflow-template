@@ -296,7 +296,8 @@ Rules:
 
 1. User: asks for the change. Claude: if it is not trivial, proposes the plan and waits for the go-ahead. With
    decisions still open, the user can run `/grill-me` instead, which settles them one round of questions at a time.
-   User: runs `/issue`, which writes what was agreed as an issue; for an issue already open, names it instead.
+   User: runs `/issue`, which writes what was agreed as an issue, or one issue per slice when the change splits;
+   for an issue already open, names it instead.
 2. Claude: with the user's go-ahead, creates the branch of the issue, then writes code and tests. The Stop hook
    runs `deno task verify` at the end of the turn.
 3. Claude: with `verify` green, runs `/review` and shows the report.
@@ -327,6 +328,10 @@ include code from other PRs.
   issue's: `feat/5-startup-config`. `fix/` when the issue reports a bug. It starts from the `develop` on GitHub
   and does not track it, because its upstream is set by the first push of `/pr`: `git fetch origin`, then
   `git switch --no-track -c <branch> origin/develop`.
+- An issue starts only when every issue in its **Blocked by** is closed as completed: its branch starts from
+  `origin/develop`, which holds the code of a blocking issue only once its PR is merged. A blocking issue closed
+  as not planned stops the work, and the user decides whether the issue that depends on it still makes sense.
+  An issue without the section is not blocked.
 - PR title: `<number> - <title of the issue>`, with the issue's number: `5 - Startup configuration validation`.
   No Conventional Commits prefix in the title: that lives in the commit messages.
 - Flow: branch → PR to `develop` → PR `develop` → `main`. No direct push to `develop` or `main`:
