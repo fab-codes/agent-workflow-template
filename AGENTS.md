@@ -294,7 +294,8 @@ Rules:
 
 ### Cycle of a change
 
-1. User: asks for the change. Claude: if it is not trivial, proposes the plan and waits for the go-ahead.
+1. User: asks for the change. Claude: if it is not trivial, proposes the plan and waits for the go-ahead. With
+   decisions still open, the user can run `/grill-me` instead, which settles them one round of questions at a time.
    User: runs `/issue`, which writes what was agreed as an issue; for an issue already open, names it instead.
 2. Claude: with the user's go-ahead, creates the branch of the issue, then writes code and tests. The Stop hook
    runs `deno task verify` at the end of the turn.

@@ -62,6 +62,7 @@ gh repo edit <owner>/agent-workflow-template --template --default-branch develop
 | `AGENTS.md`, `CLAUDE.md`                                              | Generic rules plus placeholders to fill in               |
 | `scripts/check-invariants.ts`                                         | Generic invariants; the project's own are added here     |
 | `.claude/settings.json`, `.claude/hooks/verify.ts`                    | Ready: permissions, attribution, Stop hook               |
+| `.claude/skills/grill-me/SKILL.md`, `.claude/skills/grill-me/LICENSE` | Ready: `/grill-me`, the interview that settles the plan  |
 | `.claude/skills/issue/SKILL.md`                                       | Ready: `/issue`, the agreed change as a GitHub issue     |
 | `.claude/skills/review/SKILL.md`                                      | Ready: `/review`, maintainability and fit with the issue |
 | `.claude/skills/codex-review/SKILL.md`                                | Ready: `/codex-review`, the Codex review and its record  |
