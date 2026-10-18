@@ -78,10 +78,12 @@ it is not a finding.
 
 ## After the decision
 
+An accepted finding goes through `/tdd`, its Step 6, before its outcome is written.
+
 Write the outcome of each finding under `## Outcomes` in the record, `none` if there were no P0/P1 findings:
 
-- accepted: the name of the test that reproduces it and what the fix changes. The code changes, so this is a new
-  commit, with the user's go-ahead, and the new HEAD comes back to this skill;
+- accepted: the name of the test that reproduces it, the failure line seen at red and what the fix changes. The
+  code changes, so this is a new commit, with the user's go-ahead, and the new HEAD comes back to this skill;
 - rejected: the reason.
 
 To close a finding, never modify `AGENTS.md`, `GLOSSARY.md`, the ADRs or the step 5 command. A finding is closed
