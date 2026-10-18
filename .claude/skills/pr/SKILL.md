@@ -1,6 +1,5 @@
 ---
 description: Step 7 of AGENTS.md §12 — push the branch and open, or update, its PR to develop with the Review section filled in
-argument-hint: [title description — default: from the branch name]
 disable-model-invocation: true
 ---
 
@@ -20,22 +19,22 @@ Stop at the first one that fails, and say why:
 1. `git status --porcelain` is not empty.
 2. The branch does not match `feat/<n>-<description>` or `fix/<n>-<description>` (§12, Rules).
 3. HEAD has no record: it was not reviewed, or the code changed after the review. Point to `/codex-review`.
-4. `<n>` is not the number GitHub will give, or gave, to the PR:
-   - if the branch already has an open PR (`gh pr list --head <branch> --state open --json number,url`), its
-     number must be `<n>`;
-   - otherwise `<n>` must be the last number plus one. Issues and PRs share the numbering, and this endpoint
-     returns both: `gh api "repos/{owner}/{repo}/issues?state=all&per_page=1" --jq '.[0].number // 0'`.
-
-   Renaming the branch is the user's decision: say which number is expected, and stop.
+4. `#<n>` is not an open issue: `gh issue view <n> --json state,title,url` must give the state `OPEN` and a URL
+   with `/issues/`. On the number of a PR, `gh issue view` answers with the PR, with no error. Renaming the
+   branch is the user's decision.
+5. The default branch on GitHub is not `develop`
+   (`gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`): GitHub ignores `Closes #<n>` in a PR to
+   any other branch, and the issue would stay open after the merge (§12, Rules). Changing it is the user's
+   decision: `gh repo edit --default-branch develop`.
 
 ## Title and body
 
-Title: `<n> - <description>`. The description is **$ARGUMENTS**; if empty, write it in English from the branch
-description, with no Conventional Commits prefix (§12, Rules).
+Title: `<n> - <title of the issue>` (§12, Rules).
 
 Body: `.github/pull_request_template.md`, filled in.
 
 - In place of the opening comment: what changes and why, in English, from `git log origin/develop..HEAD`.
+- `Closes #<n>`, with the number of the issue.
 - **Reviewed SHA**: the full SHA of HEAD.
 - **Model** and **Effort**: from the record of HEAD.
 - The full output: the stdout in the record of HEAD, unedited, in a fence longer than the longest run of
@@ -55,8 +54,7 @@ fence, line breaks included.
 
 1. Write the body to `pr-<n>.md` in the records folder, and show the title and the body.
 2. `git push -u origin <branch>`.
-3. Without an open PR: `gh pr create --base develop --title "<n> - <description>" --body-file <file>`.
-   With an open PR: `gh pr edit --body-file <file>`, so that the body follows the new SHA. The title stays.
-4. Show the URL of the PR. If its number is not `<n>`, say so: Discussions and deleted issues use up numbers
-   that check 4 cannot see, and fixing the title and the branch is the user's decision. CI and the merge are
-   the user's (§12, step 8).
+3. Look for an open PR of the branch: `gh pr list --head <branch> --state open --json number,url`.
+   Without one: `gh pr create --base develop --title "<n> - <title of the issue>" --body-file <file>`.
+   With one: `gh pr edit --body-file <file>`, so that the body follows the new SHA. The title stays.
+4. Show the URL of the PR. CI and the merge are the user's (§12, step 8); the merge closes the issue.

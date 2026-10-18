@@ -1,4 +1,6 @@
-<!-- What changes and why, in English. Title: "<number> - <description>", the number of the branch. -->
+<!-- What changes and why, in English. Title: "<number> - <title of the issue>", with the number of the issue in the branch name. -->
+
+Closes #<number of the issue>
 
 ## Review
 

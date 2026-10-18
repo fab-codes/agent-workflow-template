@@ -1,5 +1,5 @@
 ---
-description: Maintainability review against AGENTS.md — over-engineering, consistency, comments
+description: Maintainability review against AGENTS.md — over-engineering, consistency, comments, fit with the issue
 argument-hint: [path or git ref — default: uncommitted changes]
 ---
 
@@ -22,10 +22,11 @@ after seeing the findings.
 
 ## Scope
 
-This review looks at maintainability. Correctness and security, that is the P0 and P1 items of **Code Review
-Rules** in `AGENTS.md`, are judged by the independent review (§12), on a different model: repeating them here
-would produce two correlated judgments counted as two independent checks. If while reading you still come across
-a problem of that kind, do not keep quiet about it: put it at the top of the report. But do not go looking for it.
+This review looks at maintainability, and at whether the change stays within its issue. Correctness and
+security, that is the P0 and P1 items of **Code Review Rules** in `AGENTS.md`, are judged by the independent
+review (§12), on a different model: repeating them here would produce two correlated judgments counted as two
+independent checks. If while reading you still come across a problem of that kind, do not keep quiet about it:
+put it at the top of the report. But do not go looking for it.
 
 ## The lenses
 
@@ -64,6 +65,16 @@ code; comments that describe a previous version of the code and now lie; prose t
 Signals of too little — they count as much as the previous ones: a trap of a critical dependency used without the
 note that explains it (§7), a security decision without its reason, a cast at a library boundary without the
 comment that justifies it (§6).
+
+### Lens 4 — Fit with the issue (§12, Rules; `CLAUDE.md`, Workflow)
+
+The yardstick is the issue of the branch: `gh issue view <n>`, with `<n>` from `feat/<n>-…` or `fix/<n>-…`.
+Without an issue, write it in the report and skip this lens.
+
+Question: _does the change do what the issue decided, and nothing else?_
+
+Signals: a file or a behavior that no item of **Decisions** asks for; something the issue lists under **Out of
+scope**; a decision left undone without a word about it.
 
 ## Report
 
