@@ -121,7 +121,8 @@ the subcommand. To work in another folder, `cd` into it and then `git push`, nev
 
 `.env` files are neither readable nor editable, except `.env.example`: the user writes the `.env`. Every shell rule
 comes in a pair, `Bash(...)` and `PowerShell(...)`: on Windows a `deny` on Bash without its twin PowerShell rule
-silently turns off the PowerShell tool.
+silently turns off the PowerShell tool, and an `ask` without its twin leaves the command unguarded from the other
+shell. `deno task invariants` checks the pairs of `ask` and `deny`.
 
 The `attribution` block of `.claude/settings.json` uses the form `"commit": "", "pr": "", "sessionUrl": false`.
 The short form `"attribution": false` requires Claude Code 2.1.281: on an earlier version it makes the file

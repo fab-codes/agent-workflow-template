@@ -3,6 +3,7 @@ import {
   codexDocumentLimitProblem,
   titleCommandLinesWithPathConversion,
   unexpectedTestTaskArguments,
+  unpairedShellRules,
 } from "../../scripts/check-invariants.ts";
 
 Deno.test("accepts the test task that only reads the environment", () => {
@@ -116,4 +117,29 @@ Deno.test("checks a title command inside a fenced block too", () => {
   const skill = ["```bash", 'gh issue create --title "<title>" --body-file <file>', "```"].join("\n");
 
   assertEquals(titleCommandLinesWithPathConversion(skill), [2]);
+});
+
+Deno.test("accepts shell rules that come in their Bash and PowerShell pair", () => {
+  assertEquals(unpairedShellRules(["Bash(git push *)", "PowerShell(git push *)"]), []);
+});
+
+Deno.test("rejects a Bash rule whose PowerShell twin is missing, which leaves PowerShell unguarded", () => {
+  assertEquals(unpairedShellRules(["Bash(git push *)", "PowerShell(git push *)", "Bash(gh api *)"]), [
+    "Bash(gh api *)",
+  ]);
+});
+
+Deno.test("rejects a PowerShell rule whose Bash twin is missing", () => {
+  assertEquals(unpairedShellRules(["PowerShell(gh api *)"]), ["PowerShell(gh api *)"]);
+});
+
+Deno.test("does not take a rule with another pattern for the twin", () => {
+  assertEquals(unpairedShellRules(["Bash(gh api *)", "PowerShell(gh api)"]), [
+    "Bash(gh api *)",
+    "PowerShell(gh api)",
+  ]);
+});
+
+Deno.test("ignores the rules that are not shell rules", () => {
+  assertEquals(unpairedShellRules(["Read(.env)", "Edit(.env)", "Read(!.env.example)"]), []);
 });
