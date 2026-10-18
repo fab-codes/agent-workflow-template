@@ -61,7 +61,9 @@ One issue at a time, blocking issues first, so that every Blocked by cites real 
 
 1. Write the body to `issue.md` in `$(git rev-parse --path-format=absolute --git-common-dir)`, and show the
    title and the body.
-2. `gh issue create --title "<title>" --body-file <file>`, as written: no labels, no parent issue.
+2. `MSYS_NO_PATHCONV=1 gh issue create --title "<title>" --body-file <file>`, as written: no labels, no parent
+   issue. The prefix keeps Git Bash from rewriting a title that starts with `/` into a Windows path (`CLAUDE.md`,
+   Local environment).
 3. Show the URL of the issue.
 
 If a creation fails or its prompt is denied, stop. The issues already created stay as they are: list them, with

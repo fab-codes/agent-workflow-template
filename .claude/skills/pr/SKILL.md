@@ -55,6 +55,7 @@ fence, line breaks included.
 1. Write the body to `pr-<n>.md` in the records folder, and show the title and the body.
 2. `git push -u origin <branch>`.
 3. Look for an open PR of the branch: `gh pr list --head <branch> --state open --json number,url`.
-   Without one: `gh pr create --base develop --title "<n> - <title of the issue>" --body-file <file>`.
+   Without one: `MSYS_NO_PATHCONV=1 gh pr create --base develop --title "<n> - <title of the issue>" --body-file <file>`,
+   with the prefix every title on a command line carries (`CLAUDE.md`, Local environment).
    With one: `gh pr edit --body-file <file>`, so that the body follows the new SHA. The title stays.
 4. Show the URL of the PR. CI and the merge are the user's (§12, step 8); the merge closes the issue.

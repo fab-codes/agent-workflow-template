@@ -25,6 +25,13 @@ Each step is one or more PRs, following the cycle in `AGENTS.md` §12.
 
 - On Windows the primary shell is PowerShell 5.1: no `&&`, no ternary operators, no bash here-strings.
   For POSIX scripts use the Bash tool.
+- In the Bash tool, Git Bash rewrites as a Windows path every argument to a native program (`git`, `gh`, `deno`,
+  `codex`) that starts with `/` or `@/`, and the value of `--option=/…`: `/issue x` becomes
+  `C:/Program Files/Git/issue x`. Free text on a command line, such as a title, goes after `MSYS_NO_PATHCONV=1`:
+  `MSYS_NO_PATHCONV=1 gh issue create --title "…"`, and `deno task invariants` checks it in the skills. Not in the
+  `env` block of `.claude/settings.json`: it would turn off the rewriting that makes `$PWD`, `~`, `mktemp` and
+  `/dev/null` work as arguments of a native program. The `ask` rules match past the assignment, so the prompt
+  stays. Text passed through a file, such as `--body-file`, is not touched.
 - The Codex review (step 5 of `AGENTS.md` §12) writes the review to stdout and the session transcript to
   stderr. The PR gets stdout, in full; model and effort are read from the stderr header (`model:`,
   `reasoning effort:`). On Windows `deno test` panics inside Codex's read-only sandbox, and the review ends
