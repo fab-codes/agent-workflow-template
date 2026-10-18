@@ -40,7 +40,7 @@ Signals: factories, wrappers, registries, configuration layers; a folder with a 
 used only once; caching, pooling or batching without a measurement that justifies them; optional parameters that
 no caller passes; flags never read; dead code; generalization for a second use case that does not exist yet.
 
-### Lens 2 — Consistency with the codebase (§5, §6, §10)
+### Lens 2 — Consistency with the codebase (§5, §6, §10, §11)
 
 The yardstick is not an abstract ideal: it is the files that already exist. Pick two or three sibling files —
 same layer, same role — and compare.
@@ -50,7 +50,10 @@ Question: _would a reader understand that this file and the ones next to it were
 Signals: dependency direction inverted with respect to §5.1; an error handled in a form different from the single
 domain error model of §5.3; naming outside the table in §10; `type` where the neighbors use `interface` or vice
 versa; imports without the `.ts` extension, or without `import type` when importing only types; a test structure
-different from that of the other test files; a type crossing a boundary that the others respect.
+different from that of the other test files; a type crossing a boundary that the others respect; a domain concept
+named with a synonym that `GLOSSARY.md` lists under `_Avoid_`; a change that contradicts an ADR without a new ADR
+that replaces it; a glossary entry with implementation details, or an ADR that fails one of the three criteria of
+§11.
 
 ### Lens 3 — Comments (§11, §4.3)
 

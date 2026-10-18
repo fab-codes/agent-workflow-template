@@ -57,23 +57,23 @@ gh repo edit <owner>/agent-workflow-template --template --default-branch develop
 
 ## What it contains
 
-| File                                                                  | Status                                                            |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `AGENTS.md`, `CLAUDE.md`                                              | Generic rules plus placeholders to fill in                        |
-| `scripts/check-invariants.ts`                                         | Generic invariants; the project's own are added here              |
-| `.claude/settings.json`, `.claude/hooks/verify.ts`                    | Ready: permissions, attribution, Stop hook                        |
-| `.claude/skills/grill-me/SKILL.md`, `.claude/skills/grill-me/LICENSE` | Ready: `/grill-me`, the interview that settles the plan           |
-| `.claude/skills/diagnose/SKILL.md`, `.claude/skills/diagnose/LICENSE` | Ready: `/diagnose`, the confirmed cause of a bug, before `/issue` |
-| `.claude/skills/issue/SKILL.md`, `.claude/skills/issue/LICENSE`       | Ready: `/issue`, the agreed change as one issue, or one per slice |
-| `.claude/skills/tdd/SKILL.md`, `.claude/skills/tdd/LICENSE`           | Ready: `/tdd`, each test seen red before its code                 |
-| `.claude/skills/review/SKILL.md`                                      | Ready: `/review`, maintainability and fit with the issue          |
-| `.claude/skills/codex-review/SKILL.md`                                | Ready: `/codex-review`, the Codex review and its record           |
-| `.claude/skills/pr/SKILL.md`                                          | Ready: `/pr`, push and PR with the Review section                 |
-| `.github/ISSUE_TEMPLATE/change.md`                                    | Ready: the sections of an issue                                   |
-| `.github/workflows/ci.yml`, `.github/pull_request_template.md`        | Ready: CI and the PR's Review section                             |
-| `.github/workflows/reviewed-sha.yml`, `scripts/check-reviewed-sha.ts` | Ready: the CI check of the Reviewed SHA                           |
-| `deno.json`, `.gitattributes`, `.gitignore`, `tests/`                 | Ready; `deno.json` grows with the project's dependencies          |
-| `docs/workflow.md`                                                    | Ready: the cycle on one page                                      |
+| File                                                                  | Status                                                                          |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `AGENTS.md`, `CLAUDE.md`                                              | Generic rules plus placeholders to fill in                                      |
+| `scripts/check-invariants.ts`                                         | Generic invariants; the project's own are added here                            |
+| `.claude/settings.json`, `.claude/hooks/verify.ts`                    | Ready: permissions, attribution, Stop hook                                      |
+| `.claude/skills/grill-me/SKILL.md`, `.claude/skills/grill-me/LICENSE` | Ready: `/grill-me`, the interview that settles the plan, its terms and its ADRs |
+| `.claude/skills/diagnose/SKILL.md`, `.claude/skills/diagnose/LICENSE` | Ready: `/diagnose`, the confirmed cause of a bug, before `/issue`               |
+| `.claude/skills/issue/SKILL.md`, `.claude/skills/issue/LICENSE`       | Ready: `/issue`, the agreed change as one issue, or one per slice               |
+| `.claude/skills/tdd/SKILL.md`, `.claude/skills/tdd/LICENSE`           | Ready: `/tdd`, each test seen red before its code                               |
+| `.claude/skills/review/SKILL.md`                                      | Ready: `/review`, maintainability and fit with the issue                        |
+| `.claude/skills/codex-review/SKILL.md`                                | Ready: `/codex-review`, the Codex review and its record                         |
+| `.claude/skills/pr/SKILL.md`                                          | Ready: `/pr`, push and PR with the Review section                               |
+| `.github/ISSUE_TEMPLATE/change.md`                                    | Ready: the sections of an issue                                                 |
+| `.github/workflows/ci.yml`, `.github/pull_request_template.md`        | Ready: CI and the PR's Review section                                           |
+| `.github/workflows/reviewed-sha.yml`, `scripts/check-reviewed-sha.ts` | Ready: the CI check of the Reviewed SHA                                         |
+| `deno.json`, `.gitattributes`, `.gitignore`, `tests/`                 | Ready; `deno.json` grows with the project's dependencies                        |
+| `docs/workflow.md`                                                    | Ready: the cycle on one page                                                    |
 
 ## If the project does not use Deno
 

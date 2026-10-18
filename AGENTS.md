@@ -292,6 +292,53 @@ Rules:
   No decorative blocks, section banners or JSDoc that restates the signature.
 - Project documentation (`README.md`, this file) in English.
 
+### Glossary and ADRs
+
+Where each thing lives:
+
+- `AGENTS.md` holds the rules: what whoever writes must or must not do. A rule never lives only in an ADR: when a
+  decision implies a rule, the rule goes here, where every tool and Codex read it.
+- An ADR holds the why of a hard-to-reverse decision, with the alternative it rejected. It is not binding on its
+  own.
+- `GLOSSARY.md` holds the terms of the domain: what each one is, and which synonyms to avoid. No rules, no
+  implementation details, no decisions: a glossary that takes them in turns into a spec.
+- The issue holds every decision of its branch. The ADRs are the few that outlive the branch, next to the code.
+
+Before working on an area, read `GLOSSARY.md` and the ADRs that touch it, if they exist, without flagging their
+absence. Names, issue titles and test names use the term of the glossary, never a synonym listed under `_Avoid_`.
+A proposal that contradicts an ADR says so explicitly.
+
+`GLOSSARY.md` sits at the root, one for the whole project, each entry in this form:
+
+```markdown
+**Order**:
+A request from a customer for one or more products, from checkout to delivery.
+_Avoid_: Purchase, transaction
+```
+
+- One or two sentences on what the term is, not on what it does.
+- Only the project's own terms: a general programming concept, such as a timeout or an error type, stays out.
+- Subheadings when natural groups emerge, a flat list otherwise.
+- It is edited in place: removing or renaming a term is a change like any other.
+
+An ADR is `docs/adr/NNNN-slug.md`, written only when all three of these hold:
+
+1. **Hard to reverse**: changing one's mind later has a real cost.
+2. **Surprising without context**: a future reader would wonder why it was done this way.
+3. **The result of a real trade-off**: there were genuine alternatives, and one was picked for specific reasons.
+
+When one is missing there is no ADR: an easy decision gets reversed, an unsurprising one is nobody's question, and
+one with no alternative records only the obvious. The ADR is a title and one to three sentences, with no front
+matter: the context, the decision, the why. "Considered options" and "Consequences" only when they add what the
+sentences cannot.
+
+- Its number is the highest in `docs/adr/` on `origin/develop` plus one, taken at step 2 after `git fetch origin`.
+- Once merged, an ADR is never rewritten. A reversed decision is a new ADR that names the one it replaces, and the
+  old one gets a single line: `Superseded by ADR-NNNN`.
+
+Both are born lazily (§4.2): `GLOSSARY.md` with the first term and `docs/adr/` with the first ADR that the
+Decisions of an issue ask for, written at step 2 on the branch of the issue.
+
 ## 12. Development cycle and Git
 
 ### Cycle of a change

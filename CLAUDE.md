@@ -46,7 +46,8 @@ opens the session.
 
 Claude's memory holds on one PC and one path only. A fact needed to work on the project, such as a decision by the
 user or a discovered trap, goes in this file or in `AGENTS.md`, not in memory: if the memory disappears, nothing
-must break.
+must break. A term of the domain goes in `GLOSSARY.md`, and the why of a hard-to-reverse decision in an ADR
+(`AGENTS.md` §11).
 
 ## Workflow
 
@@ -69,7 +70,8 @@ must break.
 6. **Stay in scope.** Do what was asked. Collateral refactors, file reshuffles, dependency upgrades and "while
    I'm at it" improvements are proposed, not carried out.
 7. **No side files.** Do not create extra READMEs, summaries, `.md` documentation or helper scripts unless
-   explicitly asked.
+   explicitly asked. `GLOSSARY.md` and the ADRs are not side files: they are written when the Decisions of the
+   issue ask for them (`AGENTS.md` §11).
 8. **Flag real problems.** If a request conflicts with `AGENTS.md` — for example it makes a violation of an
    invariant of §4.1 possible, or adds an out-of-scope capability (§1) — say so in one sentence and propose the
    alternative, instead of silently going ahead.
