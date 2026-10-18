@@ -298,8 +298,9 @@ Rules:
 
 1. User: asks for the change. Claude: if it is not trivial, proposes the plan and waits for the go-ahead. With
    decisions still open, the user can run `/grill-me` instead, which settles them one round of questions at a time.
-   User: runs `/issue`, which writes what was agreed as an issue, or one issue per slice when the change splits;
-   for an issue already open, names it instead.
+   For a bug whose cause is not known, the user can run `/diagnose`, which ends at the cause confirmed by a red
+   feedback loop. User: runs `/issue`, which writes what was agreed as an issue, or one issue per slice when the
+   change splits; for an issue already open, names it instead.
 2. Claude: with the user's go-ahead, creates the branch of the issue, then writes tests and code with `/tdd`, each
    test seen red before the code turns it green. The Stop hook runs `deno task verify` at the end of the turn.
 3. Claude: with `verify` green, runs `/review` and shows the report.

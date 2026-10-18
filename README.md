@@ -63,6 +63,7 @@ gh repo edit <owner>/agent-workflow-template --template --default-branch develop
 | `scripts/check-invariants.ts`                                         | Generic invariants; the project's own are added here              |
 | `.claude/settings.json`, `.claude/hooks/verify.ts`                    | Ready: permissions, attribution, Stop hook                        |
 | `.claude/skills/grill-me/SKILL.md`, `.claude/skills/grill-me/LICENSE` | Ready: `/grill-me`, the interview that settles the plan           |
+| `.claude/skills/diagnose/SKILL.md`, `.claude/skills/diagnose/LICENSE` | Ready: `/diagnose`, the confirmed cause of a bug, before `/issue` |
 | `.claude/skills/issue/SKILL.md`, `.claude/skills/issue/LICENSE`       | Ready: `/issue`, the agreed change as one issue, or one per slice |
 | `.claude/skills/tdd/SKILL.md`, `.claude/skills/tdd/LICENSE`           | Ready: `/tdd`, each test seen red before its code                 |
 | `.claude/skills/review/SKILL.md`                                      | Ready: `/review`, maintainability and fit with the issue          |
