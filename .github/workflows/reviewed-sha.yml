@@ -1,0 +1,38 @@
+name: Reviewed SHA
+
+# This runs the PR's own copy of the script, so a PR can change it and pass: the check catches mistakes, it
+# does not stop someone set on getting around it.
+on:
+  pull_request:
+    branches: [develop]
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reviewed-sha-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reviewed-sha:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install Deno
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: "2.9.6"
+
+      # Through env, never ${{ }} inside run: anyone who opens a PR writes the body, and an expression inside
+      # run: is pasted into the shell script before it runs.
+      - name: Check the Reviewed SHA
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: deno run --allow-env=PR_BODY,HEAD_SHA scripts/check-reviewed-sha.ts

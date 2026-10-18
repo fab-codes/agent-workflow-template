@@ -326,7 +326,8 @@ include code from other PRs.
 - The PR body has a **Review** section: the SHA of the last review, the model and effort that ran it, its full
   output and the outcome of every P0/P1 finding raised during the cycle. An accepted finding is closed with the
   test that reproduces it and then the fix; a rejected one, with the reason. The template is in
-  `.github/pull_request_template.md`.
+  `.github/pull_request_template.md`. CI checks that the Reviewed SHA is the head of the PR; without a ruleset a
+  red check does not block the merge.
 - A PR is merged only with CI green and every P0/P1 finding closed in the **Review** section. GitHub does not
   enforce it: this rule is the gate.
 - Commit messages in English, Conventional Commits: `feat:`, `fix:`, `refactor:`, `perf:`, `docs:`, `test:`, `chore:`.
