@@ -295,7 +295,9 @@ Rules:
 ### Cycle of a change
 
 1. User: asks for the change. Claude: if it is not trivial, proposes the plan and waits for the go-ahead.
-2. Claude: writes code and tests. The Stop hook runs `deno task verify` at the end of the turn.
+   User: runs `/issue`, which writes what was agreed as an issue; for an issue already open, names it instead.
+2. Claude: with the user's go-ahead, creates the branch of the issue, then writes code and tests. The Stop hook
+   runs `deno task verify` at the end of the turn.
 3. Claude: with `verify` green, runs `/review` and shows the report.
 4. User: approves the commit. Claude: commits.
 5. Claude: runs `/codex-review`, which runs `git fetch origin` and
@@ -304,8 +306,9 @@ Rules:
 6. Claude: for each P0/P1 finding, writes the test that reproduces it and then the fix, or explains why it would
    reject it; the user decides. If the code changes, new commit and back to step 5: an outcome holds only for
    the SHA it saw.
-7. User: runs `/pr`. Claude: push and PR to `develop`, with the **Review** section filled in.
-8. User: with CI green, merges.
+7. User: runs `/pr`. Claude: push and PR to `develop`, with `Closes #<number>` and the **Review** section filled
+   in.
+8. User: with CI green, merges. GitHub closes the issue.
 
 The step 5 command is fixed, with no additional instructions: whoever wrote the code does not choose what the
 reviewer looks at. The two `-c` are not instructions: the first makes Codex read this file in full (Code Review
@@ -316,13 +319,19 @@ include code from other PRs.
 
 ### Rules
 
-- Branch: `feat/<number>-<short-description>` or `fix/<number>-<short-description>`, where the number is
-  sequential and matches the PR's: `feat/5-startup-config`.
-- PR title: `<number> - <description in English>`, with the same number as the branch:
-  `5 - Startup configuration validation`. No Conventional Commits prefix in the title:
-  that lives in the commit messages.
+- One issue, one branch, one PR, for every change, small ones included. The issue holds what was agreed, in the
+  sections of `.github/ISSUE_TEMPLATE/change.md`: it is where the work of a branch is read back, after a `/clear`
+  or on another PC. Its title says what changes, in English, with no number and no Conventional Commits prefix.
+- Branch: `feat/<number>-<short-description>` or `fix/<number>-<short-description>`, where the number is the
+  issue's: `feat/5-startup-config`. `fix/` when the issue reports a bug. It starts from the `develop` on GitHub
+  and does not track it, because its upstream is set by the first push of `/pr`: `git fetch origin`, then
+  `git switch --no-track -c <branch> origin/develop`.
+- PR title: `<number> - <title of the issue>`, with the issue's number: `5 - Startup configuration validation`.
+  No Conventional Commits prefix in the title: that lives in the commit messages.
 - Flow: branch → PR to `develop` → PR `develop` → `main`. No direct push to `develop` or `main`:
   every change goes through a PR, so CI and the independent review see it before the merge.
+- `develop` is the default branch on GitHub: GitHub reads `Closes #<number>` only in PRs to the default branch,
+  and with any other default the issue stays open after the merge.
 - The PR body has a **Review** section: the SHA of the last review, the model and effort that ran it, its full
   output and the outcome of every P0/P1 finding raised during the cycle. An accepted finding is closed with the
   test that reproduces it and then the fix; a rejected one, with the reason. The template is in
@@ -332,7 +341,8 @@ include code from other PRs.
   enforce it: this rule is the gate.
 - Commit messages in English, Conventional Commits: `feat:`, `fix:`, `refactor:`, `perf:`, `docs:`, `test:`, `chore:`.
 - One commit is one coherent change. No avalanche commits mixing refactoring and features.
-- **Do not commit, push or open PRs unless explicitly asked.** Prepare the work in the working tree and stop.
+- **Do not commit, push, open PRs or create issues unless explicitly asked.** Prepare the work in the working tree
+  and stop.
 - Never commit `.env`, credentials or dumps of real data.
 - **No AI attribution trailers, ever**, in commit messages or PR bodies.
 

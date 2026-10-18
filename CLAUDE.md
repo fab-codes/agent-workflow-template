@@ -99,16 +99,17 @@ If a real doubt remains, ask. A wrong assumption costs more than a question.
 - Installing, removing or upgrading dependencies.
 - Modifying `deno.json`, the `Dockerfile` or the deploy configuration.
 - Any operation that writes to real services or data.
-- Any Git operation that writes: `commit`, `push`, `merge`, `rebase`, `reset`, creating a branch or a PR.
+- Any Git or GitHub operation that writes: `commit`, `push`, `merge`, `rebase`, `reset`, creating a branch, a PR
+  or an issue.
 - Deleting files or folders.
 
 <!-- TODO(template): the other changes that require confirmation, for example changing a public contract. -->
 
-Some of these rules are also enforced by `.claude/settings.json`, in every permission mode: push, PR operations,
-`reset`, `clean`, `restore` and deleting branches or stashes show a prompt to the user. The prompt adds to the
-confirmation in chat, it does not replace it. The rules match the command in the form it is written in: git
-commands that write go in the normal form, without options such as `-C` or `-c` before the subcommand. To work in
-another folder, `cd` into it and then `git push`, never `git -C folder push`.
+Some of these rules are also enforced by `.claude/settings.json`, in every permission mode: push, PR and issue
+operations, `reset`, `clean`, `restore` and deleting branches or stashes show a prompt to the user. The prompt
+adds to the confirmation in chat, it does not replace it. The rules match the command in the form it is written
+in: git commands that write go in the normal form, without options such as `-C` or `-c` before the subcommand.
+To work in another folder, `cd` into it and then `git push`, never `git -C folder push`.
 
 `.env` files are neither readable nor editable, except `.env.example`: the user writes the `.env`. Every shell rule
 comes in a pair, `Bash(...)` and `PowerShell(...)`: on Windows a `deny` on Bash without its twin PowerShell rule

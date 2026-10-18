@@ -1,9 +1,9 @@
 # agent-workflow-template
 
-A repository skeleton for developing with Claude Code and Codex. Claude writes the code, `deno task verify`
-checks everything that needs no judgment, `/review` looks at maintainability, and Codex, a different model, does
-the independent correctness and security review before every PR. The full cycle is in
-[`docs/workflow.md`](docs/workflow.md).
+A repository skeleton for developing with Claude Code and Codex. Every change starts from a GitHub issue. Claude
+writes the code, `deno task verify` checks everything that needs no judgment, `/review` looks at maintainability,
+and Codex, a different model, does the independent correctness and security review before every PR. The full
+cycle is in [`docs/workflow.md`](docs/workflow.md).
 
 ## Requirements
 
@@ -11,10 +11,12 @@ Deno 2.9.6, Claude Code, Codex CLI and `gh`, installed and authenticated.
 
 ## Publishing the template
 
-Once, after creating the repository on GitHub, mark it as a template:
+Once, after creating the repository on GitHub, mark it as a template, with `develop` as its default branch: a
+project created from the template starts from that branch, and GitHub reads `Closes #<n>` only in PRs to the
+default branch (`AGENTS.md` §12).
 
 ```bash
-gh repo edit <owner>/agent-workflow-template --template
+gh repo edit <owner>/agent-workflow-template --template --default-branch develop
 ```
 
 ## New project
@@ -26,11 +28,12 @@ gh repo edit <owner>/agent-workflow-template --template
    gh repo create <name> --private --template <owner>/agent-workflow-template --clone
    ```
 
-2. Create `develop` and publish it: step 5 reviews against `origin/develop`, and PRs target it.
+2. Create `main` from `develop` and publish it. The new repository holds only the template's default branch,
+   `develop`, which stays the default: step 5 reviews against `origin/develop`, PRs target it, and `Closes #<n>`
+   closes an issue only in PRs to the default branch.
 
    ```bash
-   git switch -c develop
-   git push -u origin develop
+   git push origin develop:main
    ```
 
 3. Fill in the placeholders, starting from `AGENTS.md` §1. Each one says what to write; when the search finds
@@ -59,9 +62,11 @@ gh repo edit <owner>/agent-workflow-template --template
 | `AGENTS.md`, `CLAUDE.md`                                              | Generic rules plus placeholders to fill in               |
 | `scripts/check-invariants.ts`                                         | Generic invariants; the project's own are added here     |
 | `.claude/settings.json`, `.claude/hooks/verify.ts`                    | Ready: permissions, attribution, Stop hook               |
-| `.claude/skills/review/SKILL.md`                                      | Ready: `/review`, the three maintainability lenses       |
+| `.claude/skills/issue/SKILL.md`                                       | Ready: `/issue`, the agreed change as a GitHub issue     |
+| `.claude/skills/review/SKILL.md`                                      | Ready: `/review`, maintainability and fit with the issue |
 | `.claude/skills/codex-review/SKILL.md`                                | Ready: `/codex-review`, the Codex review and its record  |
 | `.claude/skills/pr/SKILL.md`                                          | Ready: `/pr`, push and PR with the Review section        |
+| `.github/ISSUE_TEMPLATE/change.md`                                    | Ready: the sections of an issue                          |
 | `.github/workflows/ci.yml`, `.github/pull_request_template.md`        | Ready: CI and the PR's Review section                    |
 | `.github/workflows/reviewed-sha.yml`, `scripts/check-reviewed-sha.ts` | Ready: the CI check of the Reviewed SHA                  |
 | `deno.json`, `.gitattributes`, `.gitignore`, `tests/`                 | Ready; `deno.json` grows with the project's dependencies |
