@@ -266,6 +266,8 @@ Rules:
 - **Tests do not access the network.** The test command has at most `--allow-env`, and `deno task invariants`
   checks it: a test cannot reach a real service, not even by mistake.
 - A test describes an observable behavior, not the implementation. The test's name says what it guarantees.
+- Expected values come from an independent source: a known literal, a worked example, the specification. A value
+  recomputed the way the code computes it makes the test pass by construction.
 - Every fixed bug comes with the test that would have caught it.
 
 ## 10. Naming
@@ -298,16 +300,16 @@ Rules:
    decisions still open, the user can run `/grill-me` instead, which settles them one round of questions at a time.
    User: runs `/issue`, which writes what was agreed as an issue, or one issue per slice when the change splits;
    for an issue already open, names it instead.
-2. Claude: with the user's go-ahead, creates the branch of the issue, then writes code and tests. The Stop hook
-   runs `deno task verify` at the end of the turn.
+2. Claude: with the user's go-ahead, creates the branch of the issue, then writes tests and code with `/tdd`, each
+   test seen red before the code turns it green. The Stop hook runs `deno task verify` at the end of the turn.
 3. Claude: with `verify` green, runs `/review` and shows the report.
 4. User: approves the commit. Claude: commits.
 5. Claude: runs `/codex-review`, which runs `git fetch origin` and
    `codex review -c project_doc_max_bytes=65536 -c model_reasoning_effort=xhigh --base origin/develop`,
    and shows the full output.
-6. Claude: for each P0/P1 finding, writes the test that reproduces it and then the fix, or explains why it would
-   reject it; the user decides. If the code changes, new commit and back to step 5: an outcome holds only for
-   the SHA it saw.
+6. Claude: for each P0/P1 finding, writes the test that reproduces it, seen red on the reviewed SHA with `/tdd`,
+   and then the fix, or explains why it would reject it; the user decides. If the code changes, new commit and
+   back to step 5: an outcome holds only for the SHA it saw.
 7. User: runs `/pr`. Claude: push and PR to `develop`, with `Closes #<number>` and the **Review** section filled
    in.
 8. User: with CI green, merges. GitHub closes the issue.
