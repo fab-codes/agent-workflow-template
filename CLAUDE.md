@@ -113,14 +113,16 @@ If a real doubt remains, ask. A wrong assumption costs more than a question.
 <!-- TODO(template): the other changes that require confirmation, for example changing a public contract. -->
 
 Some of these rules are also enforced by `.claude/settings.json`, in every permission mode: push, PR and issue
-operations, `reset`, `clean`, `restore` and deleting branches or stashes show a prompt to the user. The prompt
-adds to the confirmation in chat, it does not replace it. The rules match the command in the form it is written
-in: git commands that write go in the normal form, without options such as `-C` or `-c` before the subcommand.
-To work in another folder, `cd` into it and then `git push`, never `git -C folder push`.
+operations, `reset`, `clean`, `restore` and deleting branches or stashes show a prompt to the user. So does every
+`gh api` call, reads included: `gh api` turns into a write as soon as a field is passed, in more forms than a rule
+can name. The prompt adds to the confirmation in chat, it does not replace it. The rules match the command in the
+form it is written in: git commands that write go in the normal form, without options such as `-C` or `-c` before
+the subcommand. To work in another folder, `cd` into it and then `git push`, never `git -C folder push`.
 
 `.env` files are neither readable nor editable, except `.env.example`: the user writes the `.env`. Every shell rule
 comes in a pair, `Bash(...)` and `PowerShell(...)`: on Windows a `deny` on Bash without its twin PowerShell rule
-silently turns off the PowerShell tool.
+silently turns off the PowerShell tool, and an `ask` without its twin leaves the command unguarded from the other
+shell. `deno task invariants` checks the pairs of `ask` and `deny`.
 
 The `attribution` block of `.claude/settings.json` uses the form `"commit": "", "pr": "", "sessionUrl": false`.
 The short form `"attribution": false` requires Claude Code 2.1.281: on an earlier version it makes the file

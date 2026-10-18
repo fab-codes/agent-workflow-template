@@ -107,7 +107,7 @@ step 5: they can be added, never used in place of Codex.
 
 **Enforced by Claude Code or CI**, whatever the model does:
 
-- confirmation prompt for `git push`, `gh pr create/edit/merge/close/comment/review`, the `gh issue` writes,
+- confirmation prompt for `git push`, the `gh pr` and `gh issue` writes, every `gh api` call, reads included,
   `git reset/clean/restore` and deleting branches and stashes (`.claude/settings.json`);
 - `.env` neither readable nor editable, except `.env.example`;
 - no AI attribution in commits and PRs (`attribution` in `.claude/settings.json`);
@@ -115,8 +115,9 @@ step 5: they can be added, never used in place of Codex.
 - the Reviewed SHA of the PR body, which must be the head of the PR, on every PR to `develop` and every edit of
   its body (CI, `reviewed-sha`): a red check is visible, but without a ruleset it does not block the merge;
 - the invariants in `scripts/check-invariants.ts`: tests without network, `AGENTS.md` within the limit Codex
-  reads, `MSYS_NO_PATHCONV=1` before every `gh … --title` of the skills, no `export default`, no barrel files or
-  `utils.ts`, the direction of the layers, and the project's own.
+  reads, `MSYS_NO_PATHCONV=1` before every `gh … --title` of the skills, every shell rule of
+  `.claude/settings.json` in its Bash and PowerShell pair, no `export default`, no barrel files or `utils.ts`, the
+  direction of the layers, and the project's own.
 
 **Only written**, that is, rules Claude follows:
 

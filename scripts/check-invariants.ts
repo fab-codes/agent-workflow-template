@@ -49,6 +49,14 @@ const SKILL_FILENAME = "SKILL.md";
 const GH_TITLE_COMMAND = /\bgh [^`\n]*--title\b/g;
 const PATH_CONVERSION_OFF = "MSYS_NO_PATHCONV=1";
 
+// AGENTS.md §12: no commit, push, PR or issue without the user's go-ahead, and .claude/settings.json backs it with
+// prompts. A shell rule binds one tool only (CLAUDE.md, "Requires explicit confirmation"): an ask rule without its
+// twin leaves the command unguarded from the other shell, and a deny on Bash alone silently turns off the
+// PowerShell tool on Windows.
+const CLAUDE_SETTINGS_FILE = ".claude/settings.json";
+const PAIRED_RULE_LISTS = ["ask", "deny"] as const;
+const SHELL_RULE = /^(Bash|PowerShell)\((.*)\)$/;
+
 // AGENTS.md §5.1: dependencies point downwards only.
 // TODO(template): one rule per forbidden direction, for example
 //   { directory: "src/domain/", forbiddenSpecifier: /(^|\/)infrastructure\//,
@@ -228,11 +236,61 @@ async function checkSkillTitleCommands(): Promise<Violation[]> {
   return violations;
 }
 
+// A permission list is an array of rule strings; anything else holds no rule to check.
+function permissionRulesOf(settings: unknown, listName: string): string[] {
+  if (typeof settings !== "object" || settings === null) return [];
+  const permissions = (settings as Record<string, unknown>)["permissions"];
+  if (typeof permissions !== "object" || permissions === null) return [];
+  const rules = (permissions as Record<string, unknown>)[listName];
+  if (!Array.isArray(rules)) return [];
+  return rules.filter((rule: unknown): rule is string => typeof rule === "string");
+}
+
+export function unpairedShellRules(rules: readonly string[]): string[] {
+  return rules.filter((rule) => {
+    const [, shell, pattern] = SHELL_RULE.exec(rule) ?? [];
+    if (shell === undefined || pattern === undefined) return false;
+    const twinShell = shell === "Bash" ? "PowerShell" : "Bash";
+    return !rules.includes(`${twinShell}(${pattern})`);
+  });
+}
+
+async function checkShellRulePairs(): Promise<Violation[]> {
+  const content = await Deno.readTextFile(CLAUDE_SETTINGS_FILE);
+  let settings: unknown;
+  try {
+    settings = JSON.parse(content);
+  } catch {
+    return [{
+      file: CLAUDE_SETTINGS_FILE,
+      line: 1,
+      rule: "§12",
+      detail: "not valid JSON: Claude Code ignores the whole file, prompts included",
+    }];
+  }
+
+  const violations: Violation[] = [];
+  for (const listName of PAIRED_RULE_LISTS) {
+    for (const rule of unpairedShellRules(permissionRulesOf(settings, listName))) {
+      violations.push({
+        file: CLAUDE_SETTINGS_FILE,
+        line: lineNumberAt(content, Math.max(content.indexOf(`"${rule}"`), 0)),
+        rule: "§12",
+        detail:
+          `the ${listName} rule ${rule} has no twin for the other shell (CLAUDE.md, Requires explicit ` +
+          `confirmation)`,
+      });
+    }
+  }
+  return violations;
+}
+
 async function main(): Promise<void> {
   const violations: Violation[] = [
     ...(await checkTestTaskPermissions()),
     ...(await checkCodexDocumentLimit()),
     ...(await checkSkillTitleCommands()),
+    ...(await checkShellRulePairs()),
   ];
 
   for (const root of SCANNED_ROOTS) {
