@@ -107,7 +107,7 @@ step 5: they can be added, never used in place of Codex.
 
 **Enforced by Claude Code or CI**, whatever the model does:
 
-- confirmation prompt for `git push`, `gh pr create/edit/merge/close/comment/review`, the `gh issue` writes,
+- confirmation prompt for `git push`, the `gh pr` and `gh issue` writes, every `gh api` call, reads included,
   `git reset/clean/restore` and deleting branches and stashes (`.claude/settings.json`);
 - `.env` neither readable nor editable, except `.env.example`;
 - no AI attribution in commits and PRs (`attribution` in `.claude/settings.json`);

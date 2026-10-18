@@ -113,10 +113,11 @@ If a real doubt remains, ask. A wrong assumption costs more than a question.
 <!-- TODO(template): the other changes that require confirmation, for example changing a public contract. -->
 
 Some of these rules are also enforced by `.claude/settings.json`, in every permission mode: push, PR and issue
-operations, `reset`, `clean`, `restore` and deleting branches or stashes show a prompt to the user. The prompt
-adds to the confirmation in chat, it does not replace it. The rules match the command in the form it is written
-in: git commands that write go in the normal form, without options such as `-C` or `-c` before the subcommand.
-To work in another folder, `cd` into it and then `git push`, never `git -C folder push`.
+operations, `reset`, `clean`, `restore` and deleting branches or stashes show a prompt to the user. So does every
+`gh api` call, reads included: `gh api` turns into a write as soon as a field is passed, in more forms than a rule
+can name. The prompt adds to the confirmation in chat, it does not replace it. The rules match the command in the
+form it is written in: git commands that write go in the normal form, without options such as `-C` or `-c` before
+the subcommand. To work in another folder, `cd` into it and then `git push`, never `git -C folder push`.
 
 `.env` files are neither readable nor editable, except `.env.example`: the user writes the `.env`. Every shell rule
 comes in a pair, `Bash(...)` and `PowerShell(...)`: on Windows a `deny` on Bash without its twin PowerShell rule
