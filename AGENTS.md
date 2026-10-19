@@ -374,6 +374,11 @@ include code from other PRs.
 - One issue, one branch, one PR, for every change, small ones included. The issue holds what was agreed, in the
   sections of `.github/ISSUE_TEMPLATE/change.md`: it is where the work of a branch is read back, after a `/clear`
   or on another PC. Its title says what changes, in English, with no number and no Conventional Commits prefix.
+- A decision taken after the issue is created, while its branch is worked, goes into the body of the issue: in
+  **Decisions**, and in **Acceptance** when it changes what is checked. Never only in a comment: `gh issue view`
+  prints the body and only the number of comments, so whoever reads the issue back would not see it. Claude
+  writes the new body to a file in the Git folder, outside the working tree, as `/issue` does, shows it to the
+  user, then updates the issue with `gh issue edit <number> --body-file <file>`.
 - Branch: `feat/<number>-<short-description>` or `fix/<number>-<short-description>`, where the number is the
   issue's: `feat/5-startup-config`. `fix/` when the issue reports a bug. It starts from the `develop` on GitHub
   and does not track it, because its upstream is set by the first push of `/pr`: `git fetch origin`, then
