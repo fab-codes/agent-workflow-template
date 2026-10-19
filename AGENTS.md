@@ -352,7 +352,7 @@ Decisions of an issue ask for, written at step 2 on the branch of the issue.
    test seen red before the code turns it green. The Stop hook runs `deno task verify` at the end of the turn.
 3. Claude: with `verify` green, runs `/review` and shows the report.
 4. User: approves the commit. Claude: commits.
-5. Claude: runs `/codex-review`, which runs `git fetch origin` and
+5. Claude: runs `/codex-review`, which runs `deno task verify`, then `git fetch origin` and
    `codex review -c project_doc_max_bytes=65536 -c model_reasoning_effort=xhigh --base origin/develop`,
    and shows the full output.
 6. Claude: for each P0/P1 finding, writes the test that reproduces it, seen red on the reviewed SHA with `/tdd`,

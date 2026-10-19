@@ -23,7 +23,8 @@ flowchart TD
     S3["3 · Claude runs /review<br/>report only, no changes"]:::claude
     S4(["4 · The user approves the commit"]):::user
     CM["Claude commits"]:::claude
-    S5[["5 · codex review against origin/develop<br/>read-only sandbox"]]:::codex
+    S5["5 · Claude runs /codex-review<br/>deno task verify on HEAD"]:::claude
+    CX[["codex review against origin/develop<br/>read-only sandbox"]]:::codex
     F{"P0/P1 findings?"}:::codex
     S6["6 · Claude writes the test that reproduces it, seen red,<br/>and the fix, or explains the rejection"]:::claude
     DEC(["The user decides"]):::user
@@ -43,7 +44,9 @@ flowchart TD
     IS --> IW --> S2
     S2 --> HK
     HK -->|red, fix it| S2
-    HK -->|green| S3 --> S4 --> CM --> S5 --> F
+    HK -->|green| S3 --> S4 --> CM --> S5
+    S5 -->|red, fix it| S2
+    S5 -->|green| CX --> F
     F -->|yes| S6 --> DEC --> CH
     CH -->|yes, new commit| CM
     CH -->|no| S7
@@ -71,7 +74,7 @@ a rule Claude follows.
 | 2   | Claude        | The branch `feat/<n>-…` or `fix/<n>-…` of the issue, from `origin/develop`, with the user's go-ahead, once every issue in its Blocked by is closed as completed: one closed as not planned is for the user to judge. Then tests and code with `/tdd`, one test at a time, each seen red before its code. At the end of the turn the Stop hook runs `deno task verify`, if relevant files changed. If it is red the turn does not end and Claude fixes it; on the second failure it stops and alerts the user.                                                                                                                                                                                                                               | `verify` green (enforced)                                                                                                   |
 | 3   | Claude        | `/review`: over-engineering, consistency with neighboring files, comments, fit with the issue. It produces a report and does not touch the files.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | None: the report is shown to the user                                                                                       |
 | 4   | User, Claude  | Commit in English, Conventional Commits, with the why in the body.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | User's go-ahead on the commit (written); no AI attribution (enforced)                                                       |
-| 5   | Claude, Codex | `/codex-review`: `git fetch origin`, then the fixed command below. Codex works read-only and reports only P0 and P1. The output is shown in full and saved with SHA, model and effort in `.git/codex-review/`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | None: the outcome holds only for the reviewed SHA                                                                           |
+| 5   | Claude, Codex | `/codex-review`: `deno task verify` on HEAD, with a clean tree; if it is red, it stops without launching Codex and writes no record, and the fix is a new commit. Then `git fetch origin` and the fixed command below. Codex works read-only and reports only P0 and P1. The output is shown in full and saved with SHA, model and effort in `.git/codex-review/`.                                                                                                                                                                                                                                                                                                                                                                          | `verify` green on HEAD (written)                                                                                            |
 | 6   | Claude, user  | For each P0/P1, `/codex-review` proposes the test that reproduces it and the fix, or a reasoned rejection, and records the outcome. An accepted finding goes through `/tdd`: its test is seen red on the reviewed SHA, before the fix. If the code changes, new commit and back to 5.                                                                                                                                                                                                                                                                                                                                                                                                                                                       | The user decides (written)                                                                                                  |
 | 7   | User, Claude  | `/pr`: push and PR to `develop`, with `Closes #<n>` and the Review section filled in from the template and the records of `/codex-review`. CI runs `verify` and `reviewed-sha`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | The user runs `/pr` (written) and confirmation prompt (enforced)                                                            |
 | 8   | User          | Merge. GitHub closes the issue, because `develop` is the default branch.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `verify` and `reviewed-sha` green, every finding closed (written: without a ruleset GitHub does not block it)               |
@@ -96,11 +99,11 @@ runs: if you change it, change it in both files.
 
 ## Three checks that do not overlap
 
-| Level                    | Who runs it                                            | What it looks at                                                  | When          |
-| ------------------------ | ------------------------------------------------------ | ----------------------------------------------------------------- | ------------- |
-| Mechanical               | `deno task verify`: check, lint, fmt, test, invariants | Everything that can be checked without judgment                   | Step 2 and CI |
-| Maintainability          | Claude, with `/review`                                 | Over-engineering, consistency, comments, fit with the issue       | Step 3        |
-| Correctness and security | Codex, a different model                               | Only P0 and P1, each with a concrete scenario (Code Review Rules) | Step 5        |
+| Level                    | Who runs it                                            | What it looks at                                                  | When                  |
+| ------------------------ | ------------------------------------------------------ | ----------------------------------------------------------------- | --------------------- |
+| Mechanical               | `deno task verify`: check, lint, fmt, test, invariants | Everything that can be checked without judgment                   | Step 2, step 5 and CI |
+| Maintainability          | Claude, with `/review`                                 | Over-engineering, consistency, comments, fit with the issue       | Step 3                |
+| Correctness and security | Codex, a different model                               | Only P0 and P1, each with a concrete scenario (Code Review Rules) | Step 5                |
 
 Each one leaves out what the others cover: two judgments on the same checklist would look like two independent
 checks without being so. For the same reason Claude Code's `/code-review` and `/security-review` do not replace
@@ -132,6 +135,7 @@ step 5: they can be added, never used in place of Codex.
 - git commands in the normal form, without `-C`, so that the confirmation prompts recognize them;
 - file contents searched only with the Grep tool, or with `git grep` without `--no-index` and
   `--no-exclude-standard`, the two options that make it read ignored files: so a search does not read the `.env`;
+- `deno task verify` green on HEAD, with a clean tree, before `/codex-review` launches Codex;
 - PR merge only with CI green and findings closed.
 
 ## Who reads what
