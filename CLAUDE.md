@@ -121,10 +121,16 @@ can name. The prompt adds to the confirmation in chat, it does not replace it. T
 form it is written in: git commands that write go in the normal form, without options such as `-C` or `-c` before
 the subcommand. To work in another folder, `cd` into it and then `git push`, never `git -C folder push`.
 
-`.env` files are neither readable nor editable, except `.env.example`: the user writes the `.env`. Every shell rule
-comes in a pair, `Bash(...)` and `PowerShell(...)`: on Windows a `deny` on Bash without its twin PowerShell rule
-silently turns off the PowerShell tool, and an `ask` without its twin leaves the command unguarded from the other
-shell. `deno task invariants` checks the pairs of `ask` and `deny`.
+`.env` files are neither readable nor editable, except `.env.example`: the user writes the `.env`. The deny rules
+cover Claude Code's file tools, the file commands it recognizes in the shell, such as `cat` and `sed`, and
+redirections. They do not cover a command that reads files without naming them, such as `grep -r pattern .`, a
+script that opens files itself, or Codex, which does not read `.claude/settings.json`. So file contents are searched
+only with the Grep tool, or with `git grep` without `--no-index` and `--no-exclude-standard`, the two options that
+make it read ignored files.
+
+Every shell rule comes in a pair, `Bash(...)` and `PowerShell(...)`: on Windows a `deny` on Bash without its twin
+PowerShell rule silently turns off the PowerShell tool, and an `ask` without its twin leaves the command unguarded
+from the other shell. `deno task invariants` checks the pairs of `ask` and `deny`.
 
 The `attribution` block of `.claude/settings.json` uses the form `"commit": "", "pr": "", "sessionUrl": false`.
 The short form `"attribution": false` requires Claude Code 2.1.281: on an earlier version it makes the file

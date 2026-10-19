@@ -32,8 +32,8 @@ put it at the top of the report. But do not go looking for it.
 
 ### Lens 1 — Over-engineering (§4.2)
 
-Question, for each abstraction: _how many real callers does it have, right now?_ Count them with grep, not by
-intuition. Fewer than two callers → it gets inlined. The only exceptions are the architectural boundaries
+Question, for each abstraction: _how many real callers does it have, right now?_ Count them with the Grep tool, not
+by intuition. Fewer than two callers → it gets inlined. The only exceptions are the architectural boundaries
 declared in §5.1.
 
 Signals: factories, wrappers, registries, configuration layers; a folder with a single file; a five-line function
