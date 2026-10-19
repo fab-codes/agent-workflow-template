@@ -391,6 +391,10 @@ include code from other PRs.
   No Conventional Commits prefix in the title: that lives in the commit messages.
 - Flow: branch → PR to `develop` → PR `develop` → `main`. No direct push to `develop` or `main`:
   every change goes through a PR, so CI and the independent review see it before the merge.
+- Every PR is merged with a merge commit, to `develop` and from `develop` to `main`: the repository allows no
+  other merge method. Squash and rebase merging rewrite the commits of a PR. To `develop`, they leave out of its
+  history the commit Codex reviewed, whose SHA the PR records; to `main`, they give it commits that `develop`
+  does not have, and the two branches diverge: every following PR between them carries the old commits again.
 - `develop` is the default branch on GitHub: GitHub reads `Closes #<number>` only in PRs to the default branch,
   and with any other default the issue stays open after the merge.
 - The PR body has a **Review** section: the SHA of the last review, the model and effort that ran it, its full
