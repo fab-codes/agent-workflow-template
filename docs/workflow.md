@@ -170,6 +170,9 @@ step 5: they can be added, never used in place of Codex.
 - Branch `feat/<n>-<description>` or `fix/<n>-<description>` from `origin/develop`, where `n` is the issue number.
 - PR to `develop` with the title `<n> - <title of the issue>` and `Closes #<n>` in the body. From `develop` to
   `main` through a dedicated PR. No direct push to `develop` or `main`.
+- Every PR is merged with a merge commit, to `develop` and from `develop` to `main`: squash and rebase merging
+  are disabled in the repository settings. Both rewrite the commits of a PR: the reviewed SHA would be missing
+  from the history of `develop`, and `main` would diverge from `develop`.
 - `develop` is the default branch on GitHub, because GitHub reads `Closes #<n>` only in PRs to the default branch.
 - Commits in English, Conventional Commits, without attribution trailers.
 - The PR's **Review** section reports the reviewed SHA, Codex's model and effort, the full output and the outcome

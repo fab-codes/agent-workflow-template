@@ -11,12 +11,13 @@ Deno 2.9.6, Claude Code, Codex CLI and `gh`, installed and authenticated.
 
 ## Publishing the template
 
-Once, after creating the repository on GitHub, mark it as a template, with `develop` as its default branch: a
-project created from the template starts from that branch, and GitHub reads `Closes #<n>` only in PRs to the
-default branch (`AGENTS.md` §12).
+Once, after creating the repository on GitHub, mark it as a template, with `develop` as its default branch and
+merge commits as the only merge method: a project created from the template starts from that branch, GitHub
+reads `Closes #<n>` only in PRs to the default branch, and squash and rebase merging rewrite the commits of a PR,
+so `main` would diverge from `develop` (`AGENTS.md` §12).
 
 ```bash
-gh repo edit <owner>/agent-workflow-template --template --default-branch develop
+gh repo edit <owner>/agent-workflow-template --template --default-branch develop --enable-merge-commit --enable-squash-merge=false --enable-rebase-merge=false
 ```
 
 ## New project
@@ -28,7 +29,14 @@ gh repo edit <owner>/agent-workflow-template --template --default-branch develop
    gh repo create <name> --private --template <owner>/agent-workflow-template --clone
    ```
 
-2. Create `main` from `develop` and publish it. The new repository holds only the template's default branch,
+2. Allow only merge commits, as in the template: a repository created from a template gets its files and
+   branches, not its settings.
+
+   ```bash
+   gh repo edit <owner>/<name> --enable-merge-commit --enable-squash-merge=false --enable-rebase-merge=false
+   ```
+
+3. Create `main` from `develop` and publish it. The new repository holds only the template's default branch,
    `develop`, which stays the default: step 5 reviews against `origin/develop`, PRs target it, and `Closes #<n>`
    closes an issue only in PRs to the default branch.
 
@@ -36,16 +44,16 @@ gh repo edit <owner>/agent-workflow-template --template --default-branch develop
    git push origin develop:main
    ```
 
-3. Fill in the placeholders, starting from `AGENTS.md` §1. Each one says what to write; when the search finds
+4. Fill in the placeholders, starting from `AGENTS.md` §1. Each one says what to write; when the search finds
    only this README, the template is adapted.
 
    ```bash
    git grep -n "TODO(template)"
    ```
 
-4. Replace this README with the project's own.
-5. Run `deno task verify`: it must pass before the first PR.
-6. Optional: a ruleset on `develop` that requires the checks `verify` and `reviewed-sha`, the jobs of `ci.yml`
+5. Replace this README with the project's own.
+6. Run `deno task verify`: it must pass before the first PR.
+7. Optional: a ruleset on `develop` that requires the checks `verify` and `reviewed-sha`, the jobs of `ci.yml`
    and `reviewed-sha.yml`. Without it a red check is visible, but it does not block the merge. Rulesets are
    available in public repositories on every plan, GitHub Free included, and in private ones with GitHub Pro,
    GitHub Team and GitHub Enterprise Cloud. Once both checks have passed on a first PR:
