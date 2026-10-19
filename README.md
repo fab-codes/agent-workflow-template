@@ -80,7 +80,7 @@ gh repo edit <owner>/agent-workflow-template --template --default-branch develop
 The template assumes Deno, which the Stop hook and the invariants script need anyway. With another stack, these
 change:
 
-- the command run by `.claude/hooks/verify.ts` and its `RELEVANT_PATHS` list;
+- the command run by `.claude/hooks/verify.ts`;
 - the `Verify` step of `.github/workflows/ci.yml`;
 - §2, §3, §6 and §9 of `AGENTS.md`;
 - the check on the test command in `scripts/check-invariants.ts`, which reads it from `deno.json`.
