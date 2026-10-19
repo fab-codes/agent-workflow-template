@@ -10,12 +10,16 @@ change what Codex looks at.
 
 ## Before launching
 
-Stop, and say why, if:
+Stop at the first one that fails, and say why:
 
-- `git status --porcelain` is not empty: Codex reviews commits, and an outcome holds only for the SHA it saw;
-- the branch does not match `feat/<n>-<description>` or `fix/<n>-<description>` (§12, Rules);
-- HEAD already has a record (path below): show it. Reviewing the same SHA again is the user's call, and the new
-  run replaces the record, outcomes included.
+1. `git status --porcelain` is not empty: Codex reviews commits, and an outcome holds only for the SHA it saw.
+2. The branch does not match `feat/<n>-<description>` or `fix/<n>-<description>` (§12, Rules).
+3. HEAD already has a record (path below): show it. Reviewing the same SHA again is the user's call, and the new
+   run replaces the record, outcomes included.
+4. `deno task verify` fails. On the clean tree it checks exactly the SHA Codex would review, even a commit made
+   outside Claude: the Stop hook verifies only uncommitted changes, and Codex does not report what `verify`
+   checks (Code Review Rules). Show its output, or its end when it is long, and write no record. The fix is a
+   new commit, with the user's go-ahead, and then this skill again.
 
 ## Launch
 
