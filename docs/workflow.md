@@ -112,7 +112,10 @@ step 5: they can be added, never used in place of Codex.
 
 - confirmation prompt for `git push`, the `gh pr` and `gh issue` writes, every `gh api` call, reads included,
   `git reset/clean/restore` and deleting branches and stashes (`.claude/settings.json`);
-- `.env` neither readable nor editable, except `.env.example`;
+- `.env` neither readable nor editable, except `.env.example`, by Claude Code's file tools, by the file commands
+  it recognizes in the shell, such as `cat` and `sed`, and by redirections: the deny rules do not reach a shell
+  search that reads files without naming them, such as `grep -r`, a script that opens files itself, or Codex,
+  which does not read `.claude/settings.json`;
 - no AI attribution in commits and PRs (`attribution` in `.claude/settings.json`);
 - `deno task verify` at the end of the turn (Stop hook) and on every PR (CI);
 - the Reviewed SHA of the PR body, which must be the head of the PR, on every PR to `develop` and every edit of
@@ -127,6 +130,8 @@ step 5: they can be added, never used in place of Codex.
 - confirmation for commit, merge, rebase, branch creation;
 - confirmation for dependencies, `deno.json`, `Dockerfile`, writes to real data and file deletions;
 - git commands in the normal form, without `-C`, so that the confirmation prompts recognize them;
+- file contents searched only with the Grep tool, or with `git grep` without `--no-index` and
+  `--no-exclude-standard`, the two options that make it read ignored files: so a search does not read the `.env`;
 - PR merge only with CI green and findings closed.
 
 ## Who reads what
