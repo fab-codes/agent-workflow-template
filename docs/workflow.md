@@ -7,31 +7,46 @@ How a change goes from request to merge. This is an overview: the complete, bind
 
 ```mermaid
 flowchart TD
-    S1(["1 · The user asks for a change"]):::user
+    S1(["1 · The user asks for a change<br/>or names an open issue"]):::user
+    OPEN{"Issue already open?"}:::claude
     P{"Non-trivial?<br/>more than 3 files, structure, config"}:::claude
     PL["Claude lays out the plan"]:::claude
+    GM(["The user runs /grill-me"]):::user
+    GR["Claude asks, round by round,<br/>until every decision is settled"]:::claude
+    DG(["The user runs /diagnose"]):::user
+    DX["Claude builds a red loop on a copy of origin/develop,<br/>until the cause of the bug is confirmed"]:::claude
     OK1(["The user approves the plan"]):::user
-    S2["2 · Claude writes code and tests"]:::claude
+    IS(["The user runs /issue"]):::user
+    IW["Claude writes the issue on GitHub,<br/>or one per slice after the go-ahead on the split"]:::claude
+    S2["2 · Claude creates the branch of an unblocked issue,<br/>writes each test with /tdd, seen red before its code"]:::claude
     HK[["Stop hook at end of turn<br/>deno task verify"]]:::automatic
     S3["3 · Claude runs /review<br/>report only, no changes"]:::claude
     S4(["4 · The user approves the commit"]):::user
     CM["Claude commits"]:::claude
-    S5[["5 · codex review against origin/develop<br/>read-only sandbox"]]:::codex
+    S5["5 · Claude runs /codex-review<br/>deno task verify on HEAD"]:::claude
+    CX[["codex review against origin/develop<br/>read-only sandbox"]]:::codex
     F{"P0/P1 findings?"}:::codex
-    S6["6 · Claude writes the test that reproduces it and the fix,<br/>or explains the rejection"]:::claude
+    S6["6 · Claude writes the test that reproduces it, seen red,<br/>and the fix, or explains the rejection"]:::claude
     DEC(["The user decides"]):::user
     CH{"Did the code change?"}:::claude
     S7(["7 · The user approves push and PR"]):::user
-    PR["Claude pushes and opens the PR to develop<br/>with the Review section"]:::claude
-    CI[["GitHub CI: deno task verify"]]:::automatic
-    S8(["8 · The user merges"]):::user
+    PR["Claude pushes and opens the PR to develop<br/>that closes the issue, with the Review section"]:::claude
+    CI[["GitHub CI: verify and reviewed-sha"]]:::automatic
+    S8(["8 · The user merges<br/>GitHub closes the issue"]):::user
 
-    S1 --> P
-    P -->|yes| PL --> OK1 --> S2
-    P -->|no| S2
+    S1 --> OPEN
+    OPEN -->|yes| S2
+    OPEN -->|no| P
+    P -->|yes| PL --> OK1 --> IS
+    P -->|yes, decisions open| GM --> GR --> OK1
+    P -->|yes, a bug with unknown cause| DG --> DX --> OK1
+    P -->|no| IS
+    IS --> IW --> S2
     S2 --> HK
     HK -->|red, fix it| S2
-    HK -->|green| S3 --> S4 --> CM --> S5 --> F
+    HK -->|green| S3 --> S4 --> CM --> S5
+    S5 -->|red, fix it| S2
+    S5 -->|green| CX --> F
     F -->|yes| S6 --> DEC --> CH
     CH -->|yes, new commit| CM
     CH -->|no| S7
@@ -53,16 +68,16 @@ Orange: user · Blue: Claude Code · Green: automatic (hook, CI) · Purple: Code
 The gate is what it takes to move on. **Enforced** means Claude Code or CI guarantees it; **written**, that it is
 a rule Claude follows.
 
-| #   | Who           | What happens                                                                                                                                                                                                         | Gate                                                                  |
-| --- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| 1   | User, Claude  | The request. If it touches more than three files, the structure or the configuration, Claude lays out the plan and waits.                                                                                            | User's go-ahead on the plan (written)                                 |
-| 2   | Claude        | Code and tests. At the end of the turn the Stop hook runs `deno task verify`, if relevant files changed. If it is red the turn does not end and Claude fixes it; on the second failure it stops and alerts the user. | `verify` green (enforced)                                             |
-| 3   | Claude        | `/review`: over-engineering, consistency with neighboring files, comments. It produces a report and does not touch the files.                                                                                        | None: the report is shown to the user                                 |
-| 4   | User, Claude  | Commit in English, Conventional Commits, with the why in the body.                                                                                                                                                   | User's go-ahead on the commit (written); no AI attribution (enforced) |
-| 5   | Claude, Codex | `git fetch origin`, then the fixed command below. Codex works read-only and reports only P0 and P1. The output is shown in full.                                                                                     | None: the outcome holds only for the reviewed SHA                     |
-| 6   | Claude, user  | For each P0/P1: the test that reproduces it and the fix, or a reasoned rejection. If the code changes, new commit and back to 5.                                                                                     | The user decides (written)                                            |
-| 7   | User, Claude  | Push and PR to `develop`, with the Review section filled in from the template. CI runs `verify`.                                                                                                                     | User's go-ahead (written) and confirmation prompt (enforced)          |
-| 8   | User          | Merge.                                                                                                                                                                                                               | CI green and every finding closed (written: GitHub does not block it) |
+| #   | Who           | What happens                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Gate                                                                                                                        |
+| --- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| 1   | User, Claude  | The request, or an issue already open. If it touches more than three files, the structure or the configuration, Claude lays out the plan and waits; with decisions still open, the user can run `/grill-me` instead, which settles them one round of questions at a time, the terms of the domain and the ADRs included, written at step 2; for a bug whose cause is not known, `/diagnose` finds it with a red feedback loop on a copy of `origin/develop`, without touching the repository. Then `/issue`: Claude writes what was agreed as a GitHub issue, from `.github/ISSUE_TEMPLATE/change.md`; a change that does not fit one PR becomes one issue per slice, each with its Blocked by, after the user's go-ahead on the breakdown.                                    | User's go-ahead on the plan and on any split (written); the user runs `/issue` (written) and confirmation prompt (enforced) |
+| 2   | Claude        | The branch `feat/<n>-…` or `fix/<n>-…` of the issue, from `origin/develop`, with the user's go-ahead, once every issue in its Blocked by is closed as completed: one closed as not planned is for the user to judge. Then tests and code with `/tdd`, one test at a time, each seen red before its code. At the end of the turn the Stop hook runs `deno task verify`, if the working tree has uncommitted changes. If it is red the turn does not end and Claude fixes it; on the second failure it stops and alerts the user. A decision taken after the issue is created goes into its body, in Decisions and, when it changes what is checked, in Acceptance, never only in a comment: Claude shows the new body, then updates the issue with `gh issue edit --body-file`. | `verify` green (enforced)                                                                                                   |
+| 3   | Claude        | `/review`: over-engineering, consistency with neighboring files, comments, fit with the issue. It produces a report and does not touch the files.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | None: the report is shown to the user                                                                                       |
+| 4   | User, Claude  | Commit in English, Conventional Commits, with the why in the body.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | User's go-ahead on the commit (written); no AI attribution (enforced)                                                       |
+| 5   | Claude, Codex | `/codex-review`: `deno task verify` on HEAD, with a clean tree; if it is red, it stops without launching Codex and writes no record, and the fix is a new commit. Then `git fetch origin` and the fixed command below. Codex works read-only and reports only P0 and P1. The output is shown in full and saved with SHA, model and effort in `.git/codex-review/`.                                                                                                                                                                                                                                                                                                                                                                                                             | `verify` green on HEAD (written)                                                                                            |
+| 6   | Claude, user  | For each P0/P1, `/codex-review` proposes the test that reproduces it and the fix, or a reasoned rejection, and records the outcome. An accepted finding goes through `/tdd`: its test is seen red on the reviewed SHA, before the fix. If the code changes, new commit and back to 5.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | The user decides (written)                                                                                                  |
+| 7   | User, Claude  | `/pr`: push and PR to `develop`, with `Closes #<n>` and the Review section filled in from the template and the records of `/codex-review`. CI runs `verify` and `reviewed-sha`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | The user runs `/pr` (written) and confirmation prompt (enforced)                                                            |
+| 8   | User          | Merge. GitHub closes the issue, because `develop` is the default branch.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | `verify` and `reviewed-sha` green, every finding closed (written: without a ruleset GitHub does not block it)               |
 
 The step 5 command, the same on every PC:
 
@@ -79,16 +94,16 @@ at.
   even `low`. The model stays the CLI's default and is recorded in the PR.
 - `--base origin/develop` because the local `develop` falls behind after merges on GitHub.
 
-The command is also written in `AGENTS.md` §12, and that is the copy the invariant reads: if you change it,
-change it in both files.
+The command is also written in `AGENTS.md` §12, and that is the copy the invariant reads and `/codex-review`
+runs: if you change it, change it in both files.
 
 ## Three checks that do not overlap
 
-| Level                    | Who runs it                                            | What it looks at                                                  | When          |
-| ------------------------ | ------------------------------------------------------ | ----------------------------------------------------------------- | ------------- |
-| Mechanical               | `deno task verify`: check, lint, fmt, test, invariants | Everything that can be checked without judgment                   | Step 2 and CI |
-| Maintainability          | Claude, with `/review`                                 | Over-engineering, consistency, comments                           | Step 3        |
-| Correctness and security | Codex, a different model                               | Only P0 and P1, each with a concrete scenario (Code Review Rules) | Step 5        |
+| Level                    | Who runs it                                            | What it looks at                                                  | When                  |
+| ------------------------ | ------------------------------------------------------ | ----------------------------------------------------------------- | --------------------- |
+| Mechanical               | `deno task verify`: check, lint, fmt, test, invariants | Everything that can be checked without judgment                   | Step 2, step 5 and CI |
+| Maintainability          | Claude, with `/review`                                 | Over-engineering, consistency, comments, fit with the issue       | Step 3                |
+| Correctness and security | Codex, a different model                               | Only P0 and P1, each with a concrete scenario (Code Review Rules) | Step 5                |
 
 Each one leaves out what the others cover: two judgments on the same checklist would look like two independent
 checks without being so. For the same reason Claude Code's `/code-review` and `/security-review` do not replace
@@ -98,39 +113,67 @@ step 5: they can be added, never used in place of Codex.
 
 **Enforced by Claude Code or CI**, whatever the model does:
 
-- confirmation prompt for `git push`, `gh pr create/merge/close/comment/review`, `git reset/clean/restore` and
-  deleting branches and stashes (`.claude/settings.json`);
-- `.env` neither readable nor editable, except `.env.example`;
+- confirmation prompt for `git push`, the `gh` commands that write on GitHub, with their built-in aliases, every
+  `gh api` call, reads included, `git checkout`, `git switch` when it discards changes or resets a branch,
+  `git reset/clean/restore` and deleting branches and stashes (`.claude/settings.json`);
+- `.env` neither readable nor editable, except `.env.example`, by Claude Code's file tools, by the file commands
+  it recognizes in the shell, such as `cat` and `sed`, and by redirections: the deny rules do not reach a shell
+  search that reads files without naming them, such as `grep -r`, a script that opens files itself, or Codex,
+  which does not read `.claude/settings.json`;
 - no AI attribution in commits and PRs (`attribution` in `.claude/settings.json`);
-- `deno task verify` at the end of the turn (Stop hook) and on every PR (CI);
+- `deno task verify` at the end of every turn that leaves uncommitted changes (Stop hook) and on every PR (CI);
+- the Reviewed SHA of the PR body, which must be the head of the PR, on every PR to `develop` and every edit of
+  its body (CI, `reviewed-sha`): a red check is visible, but without a ruleset it does not block the merge;
 - the invariants in `scripts/check-invariants.ts`: tests without network, `AGENTS.md` within the limit Codex
-  reads, no `export default`, no barrel files or `utils.ts`, the direction of the layers, and the project's own.
+  reads, `MSYS_NO_PATHCONV=1` before every `gh … --title` of the skills, every shell rule of
+  `.claude/settings.json` in its Bash and PowerShell pair, no `export default`, no barrel files or `utils.ts`, the
+  direction of the layers, and the project's own.
 
 **Only written**, that is, rules Claude follows:
 
 - confirmation for commit, merge, rebase, branch creation;
 - confirmation for dependencies, `deno.json`, `Dockerfile`, writes to real data and file deletions;
-- git commands in the normal form, without `-C`, so that the confirmation prompts recognize them;
+- git commands in the normal form, without `-C` and without bundled options such as `-qf`, so that the
+  confirmation prompts recognize them;
+- file contents searched only with the Grep tool, or with `git grep` without `--no-index` and
+  `--no-exclude-standard`, the two options that make it read ignored files: so a search does not read the `.env`;
+- `deno task verify` green on HEAD, with a clean tree, before `/codex-review` launches Codex;
 - PR merge only with CI green and findings closed.
 
 ## Who reads what
 
-| File                                       | Read by                                      | Contains                                                             |
-| ------------------------------------------ | -------------------------------------------- | -------------------------------------------------------------------- |
-| `AGENTS.md`                                | Claude Code (imported by `CLAUDE.md`), Codex | The project standards and the Code Review Rules                      |
-| `CLAUDE.md`                                | Claude Code                                  | Build order, workflow, real data, portability                        |
-| `.claude/settings.json`                    | Claude Code (harness)                        | Permissions, attribution, Stop hook                                  |
-| `.claude/hooks/verify.ts`                  | Claude Code, at the end of the turn          | Runs `deno task verify` if relevant files changed                    |
-| `.claude/commands/review.md`               | Claude Code, on `/review`                    | The three lenses of the maintainability review                       |
-| `deno.json`, `scripts/check-invariants.ts` | `deno task verify`                           | The Definition of Done and the invariants                            |
-| `.github/workflows/ci.yml`                 | GitHub Actions                               | `deno task verify` on every PR and on every push to `main`/`develop` |
-| `.github/pull_request_template.md`         | GitHub, when the PR is opened                | The layout of the Review section                                     |
+| File                                       | Read by                                                 | Contains                                                                            |
+| ------------------------------------------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `AGENTS.md`                                | Claude Code (imported by `CLAUDE.md`), Codex            | The project standards and the Code Review Rules                                     |
+| `CLAUDE.md`                                | Claude Code                                             | Build order, workflow, real data, portability                                       |
+| `GLOSSARY.md`                              | Every tool, before working on an area (`AGENTS.md` §11) | The terms of the domain; born in the project with its first term                    |
+| `docs/adr/`                                | Every tool, before working on an area (`AGENTS.md` §11) | The why of the hard-to-reverse decisions; born in the project with its first ADR    |
+| `.claude/settings.json`                    | Claude Code (harness)                                   | Permissions, attribution, Stop hook                                                 |
+| `.claude/hooks/verify.ts`                  | Claude Code, at the end of the turn                     | Runs `deno task verify` if the working tree has uncommitted changes                 |
+| `.claude/skills/grill-me/SKILL.md`         | Claude Code, on `/grill-me`, launched by the user       | Step 1: the interview that settles the decisions of a change                        |
+| `.claude/skills/diagnose/SKILL.md`         | Claude Code, on `/diagnose`, launched by the user       | Step 1: the cause of a bug, confirmed by a red feedback loop                        |
+| `.claude/skills/issue/SKILL.md`            | Claude Code, on `/issue`, launched by the user          | Step 1: the agreed change as a GitHub issue                                         |
+| `.claude/skills/tdd/SKILL.md`              | Claude Code, on `/tdd`, at steps 2 and 6                | Steps 2 and 6: tests first, each one seen red before its code                       |
+| `.claude/skills/review/SKILL.md`           | Claude Code, on `/review`                               | The four lenses of the review                                                       |
+| `.claude/skills/codex-review/SKILL.md`     | Claude Code, on `/codex-review`                         | Steps 5 and 6: the Codex review and the record of its outcome                       |
+| `.claude/skills/pr/SKILL.md`               | Claude Code, on `/pr`, launched by the user             | Step 7: push and PR, with the Review section from the records                       |
+| `deno.json`, `scripts/check-invariants.ts` | `deno task verify`                                      | The Definition of Done and the invariants                                           |
+| `.github/workflows/ci.yml`                 | GitHub Actions                                          | `deno task verify` on every PR and on every push to `main`/`develop`                |
+| `.github/workflows/reviewed-sha.yml`       | GitHub Actions                                          | `scripts/check-reviewed-sha.ts` on every PR to `develop` and every edit of its body |
+| `scripts/check-reviewed-sha.ts`            | `.github/workflows/reviewed-sha.yml`                    | That the Reviewed SHA of the PR body is the head of the PR                          |
+| `.github/ISSUE_TEMPLATE/change.md`         | GitHub, when an issue is opened; `/issue`               | The sections of an issue                                                            |
+| `.github/pull_request_template.md`         | GitHub, when the PR is opened                           | The layout of the Review section                                                    |
 
 ## Conventions
 
-- Branch `feat/<n>-<description>` or `fix/<n>-<description>`, where `n` is the PR number.
-- PR to `develop` with the title `<n> - <description in English>`. From `develop` to `main` through a dedicated
-  PR. No direct push to `develop` or `main`.
+- One issue, one branch, one PR, for every change: the issue holds what was agreed.
+- Branch `feat/<n>-<description>` or `fix/<n>-<description>` from `origin/develop`, where `n` is the issue number.
+- PR to `develop` with the title `<n> - <title of the issue>` and `Closes #<n>` in the body. From `develop` to
+  `main` through a dedicated PR. No direct push to `develop` or `main`.
+- Every PR is merged with a merge commit, to `develop` and from `develop` to `main`: squash and rebase merging
+  are disabled in the repository settings. Both rewrite the commits of a PR: the reviewed SHA would be missing
+  from the history of `develop`, and `main` would diverge from `develop`.
+- `develop` is the default branch on GitHub, because GitHub reads `Closes #<n>` only in PRs to the default branch.
 - Commits in English, Conventional Commits, without attribution trailers.
 - The PR's **Review** section reports the reviewed SHA, Codex's model and effort, the full output and the outcome
   of every P0/P1 finding.

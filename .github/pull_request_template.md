@@ -1,7 +1,10 @@
-<!-- What changes and why, in English. Title: "<number> - <description>", the number of the branch. -->
+<!-- What changes and why, in English. Title: "<number> - <title of the issue>", with the number of the issue in the branch name. -->
+
+Closes #<number of the issue>
 
 ## Review
 
+<!-- CI reads the next line: it must hold the full SHA of the head of the PR, in the same format, 40 lowercase characters between backticks. -->
 **Reviewed SHA:** `<full SHA of the commit Codex reviewed>`
 **Model:** `<model:, from the stderr header>` · **Effort:** `<reasoning effort:, from the stderr header>`
 

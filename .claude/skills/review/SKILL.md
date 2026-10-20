@@ -1,5 +1,5 @@
 ---
-description: Maintainability review against AGENTS.md — over-engineering, consistency, comments
+description: Maintainability review against AGENTS.md — over-engineering, consistency, comments, fit with the issue
 argument-hint: [path or git ref — default: uncommitted changes]
 ---
 
@@ -22,24 +22,25 @@ after seeing the findings.
 
 ## Scope
 
-This review looks at maintainability. Correctness and security, that is the P0 and P1 items of **Code Review
-Rules** in `AGENTS.md`, are judged by the independent review (§12), on a different model: repeating them here
-would produce two correlated judgments counted as two independent checks. If while reading you still come across
-a problem of that kind, do not keep quiet about it: put it at the top of the report. But do not go looking for it.
+This review looks at maintainability, and at whether the change stays within its issue. Correctness and
+security, that is the P0 and P1 items of **Code Review Rules** in `AGENTS.md`, are judged by the independent
+review (§12), on a different model: repeating them here would produce two correlated judgments counted as two
+independent checks. If while reading you still come across a problem of that kind, do not keep quiet about it:
+put it at the top of the report. But do not go looking for it.
 
 ## The lenses
 
 ### Lens 1 — Over-engineering (§4.2)
 
-Question, for each abstraction: _how many real callers does it have, right now?_ Count them with grep, not by
-intuition. Fewer than two callers → it gets inlined. The only exceptions are the architectural boundaries
+Question, for each abstraction: _how many real callers does it have, right now?_ Count them with the Grep tool, not
+by intuition. Fewer than two callers → it gets inlined. The only exceptions are the architectural boundaries
 declared in §5.1.
 
 Signals: factories, wrappers, registries, configuration layers; a folder with a single file; a five-line function
 used only once; caching, pooling or batching without a measurement that justifies them; optional parameters that
 no caller passes; flags never read; dead code; generalization for a second use case that does not exist yet.
 
-### Lens 2 — Consistency with the codebase (§5, §6, §10)
+### Lens 2 — Consistency with the codebase (§5, §6, §10, §11)
 
 The yardstick is not an abstract ideal: it is the files that already exist. Pick two or three sibling files —
 same layer, same role — and compare.
@@ -49,7 +50,10 @@ Question: _would a reader understand that this file and the ones next to it were
 Signals: dependency direction inverted with respect to §5.1; an error handled in a form different from the single
 domain error model of §5.3; naming outside the table in §10; `type` where the neighbors use `interface` or vice
 versa; imports without the `.ts` extension, or without `import type` when importing only types; a test structure
-different from that of the other test files; a type crossing a boundary that the others respect.
+different from that of the other test files; a type crossing a boundary that the others respect; a domain concept
+named with a synonym that `GLOSSARY.md` lists under `_Avoid_`; a change that contradicts an ADR without a new ADR
+that replaces it; a glossary entry with implementation details, or an ADR that fails one of the three criteria of
+§11.
 
 ### Lens 3 — Comments (§11, §4.3)
 
@@ -64,6 +68,16 @@ code; comments that describe a previous version of the code and now lie; prose t
 Signals of too little — they count as much as the previous ones: a trap of a critical dependency used without the
 note that explains it (§7), a security decision without its reason, a cast at a library boundary without the
 comment that justifies it (§6).
+
+### Lens 4 — Fit with the issue (§12, Rules; `CLAUDE.md`, Workflow)
+
+The yardstick is the issue of the branch: `gh issue view <n>`, with `<n>` from `feat/<n>-…` or `fix/<n>-…`.
+Without an issue, write it in the report and skip this lens.
+
+Question: _does the change do what the issue decided, and nothing else?_
+
+Signals: a file or a behavior that no item of **Decisions** asks for; something the issue lists under **Out of
+scope**; a decision left undone without a word about it.
 
 ## Report
 

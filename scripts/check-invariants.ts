@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-console -- this is a developer-facing CLI script, not application code.
 
 // Deterministic checks for the AGENTS.md invariants that require no judgment.
-// Judgment-based review lives in AGENTS.md under "Code Review Rules" and in .claude/commands/review.md;
+// Judgment-based review lives in AGENTS.md under "Code Review Rules" and in .claude/skills/review/SKILL.md;
 // style rules live in deno.json under "lint".
 // Nothing is duplicated across the three: a rule enforced by deno lint is deliberately absent here.
 // TODO(template): add the project's own invariants, each tied to the AGENTS.md section it enforces.
@@ -38,6 +38,24 @@ const TEST_TASK_ALLOWED_ARGUMENTS = ["--allow-env"];
 // the command and this check cannot drift apart.
 const AGENTS_FILE = "AGENTS.md";
 const CODEX_REVIEW_DOCUMENT_LIMIT = /codex review [^`\n]*-c project_doc_max_bytes=(\d+)/;
+
+// AGENTS.md §12: the title of an issue or a PR says what changes. In the Bash tool Git Bash rewrites as a
+// Windows path every argument to a native program that starts with "/" (CLAUDE.md, "Local environment"), so the
+// title "/issue x" reaches GitHub as "C:/Program Files/Git/issue x": every gh command of the skills that passes
+// a title turns the rewriting off. On macOS and Linux the bug cannot be seen and the prefix looks like noise:
+// this check keeps it from being removed.
+const SKILLS_DIRECTORY = ".claude/skills";
+const SKILL_FILENAME = "SKILL.md";
+const GH_TITLE_COMMAND = /\bgh [^`\n]*--title\b/g;
+const PATH_CONVERSION_OFF = "MSYS_NO_PATHCONV=1";
+
+// AGENTS.md §12: no commit, push, PR or issue without the user's go-ahead, and .claude/settings.json backs it with
+// prompts. A shell rule binds one tool only (CLAUDE.md, "Requires explicit confirmation"): an ask rule without its
+// twin leaves the command unguarded from the other shell, and a deny on Bash alone silently turns off the
+// PowerShell tool on Windows.
+const CLAUDE_SETTINGS_FILE = ".claude/settings.json";
+const PAIRED_RULE_LISTS = ["ask", "deny"] as const;
+const SHELL_RULE = /^(Bash|PowerShell)\((.*)\)$/;
 
 // AGENTS.md §5.1: dependencies point downwards only.
 // TODO(template): one rule per forbidden direction, for example
@@ -184,10 +202,95 @@ async function checkCodexDocumentLimit(): Promise<Violation[]> {
   return [{ file: AGENTS_FILE, line, rule: "§12", detail: problem }];
 }
 
+export function titleCommandLinesWithPathConversion(skillContent: string): number[] {
+  return [...skillContent.matchAll(GH_TITLE_COMMAND)]
+    .filter((match) => !skillContent.slice(0, match.index).endsWith(`${PATH_CONVERSION_OFF} `))
+    .map((match) => lineNumberAt(skillContent, match.index));
+}
+
+async function checkSkillTitleCommands(): Promise<Violation[]> {
+  if (!(await directoryExists(SKILLS_DIRECTORY))) return [];
+
+  const violations: Violation[] = [];
+  for await (const entry of Deno.readDir(SKILLS_DIRECTORY)) {
+    if (!entry.isDirectory) continue;
+    const file = `${SKILLS_DIRECTORY}/${entry.name}/${SKILL_FILENAME}`;
+    let content: string;
+    try {
+      content = await Deno.readTextFile(file);
+    } catch (error) {
+      if (error instanceof Deno.errors.NotFound) continue;
+      throw error;
+    }
+
+    for (const line of titleCommandLinesWithPathConversion(content)) {
+      violations.push({
+        file,
+        line,
+        rule: "§12",
+        detail: `a gh command with --title must start with ${PATH_CONVERSION_OFF}, or Git Bash rewrites ` +
+          `a title starting with "/" into a Windows path (CLAUDE.md, Local environment)`,
+      });
+    }
+  }
+  return violations;
+}
+
+// A permission list is an array of rule strings; anything else holds no rule to check.
+function permissionRulesOf(settings: unknown, listName: string): string[] {
+  if (typeof settings !== "object" || settings === null) return [];
+  const permissions = (settings as Record<string, unknown>)["permissions"];
+  if (typeof permissions !== "object" || permissions === null) return [];
+  const rules = (permissions as Record<string, unknown>)[listName];
+  if (!Array.isArray(rules)) return [];
+  return rules.filter((rule: unknown): rule is string => typeof rule === "string");
+}
+
+export function unpairedShellRules(rules: readonly string[]): string[] {
+  return rules.filter((rule) => {
+    const [, shell, pattern] = SHELL_RULE.exec(rule) ?? [];
+    if (shell === undefined || pattern === undefined) return false;
+    const twinShell = shell === "Bash" ? "PowerShell" : "Bash";
+    return !rules.includes(`${twinShell}(${pattern})`);
+  });
+}
+
+async function checkShellRulePairs(): Promise<Violation[]> {
+  const content = await Deno.readTextFile(CLAUDE_SETTINGS_FILE);
+  let settings: unknown;
+  try {
+    settings = JSON.parse(content);
+  } catch {
+    return [{
+      file: CLAUDE_SETTINGS_FILE,
+      line: 1,
+      rule: "§12",
+      detail: "not valid JSON: Claude Code ignores the whole file, prompts included",
+    }];
+  }
+
+  const violations: Violation[] = [];
+  for (const listName of PAIRED_RULE_LISTS) {
+    for (const rule of unpairedShellRules(permissionRulesOf(settings, listName))) {
+      violations.push({
+        file: CLAUDE_SETTINGS_FILE,
+        line: lineNumberAt(content, Math.max(content.indexOf(`"${rule}"`), 0)),
+        rule: "§12",
+        detail:
+          `the ${listName} rule ${rule} has no twin for the other shell (CLAUDE.md, Requires explicit ` +
+          `confirmation)`,
+      });
+    }
+  }
+  return violations;
+}
+
 async function main(): Promise<void> {
   const violations: Violation[] = [
     ...(await checkTestTaskPermissions()),
     ...(await checkCodexDocumentLimit()),
+    ...(await checkSkillTitleCommands()),
+    ...(await checkShellRulePairs()),
   ];
 
   for (const root of SCANNED_ROOTS) {

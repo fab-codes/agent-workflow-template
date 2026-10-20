@@ -25,6 +25,13 @@ Each step is one or more PRs, following the cycle in `AGENTS.md` §12.
 
 - On Windows the primary shell is PowerShell 5.1: no `&&`, no ternary operators, no bash here-strings.
   For POSIX scripts use the Bash tool.
+- In the Bash tool, Git Bash rewrites as a Windows path every argument to a native program (`git`, `gh`, `deno`,
+  `codex`) that starts with `/` or `@/`, and the value of `--option=/…`: `/issue x` becomes
+  `C:/Program Files/Git/issue x`. Free text on a command line, such as a title, goes after `MSYS_NO_PATHCONV=1`:
+  `MSYS_NO_PATHCONV=1 gh issue create --title "…"`, and `deno task invariants` checks it in the skills. Not in the
+  `env` block of `.claude/settings.json`: it would turn off the rewriting that makes `$PWD`, `~`, `mktemp` and
+  `/dev/null` work as arguments of a native program. The `ask` rules match past the assignment, so the prompt
+  stays. Text passed through a file, such as `--body-file`, is not touched.
 - The Codex review (step 5 of `AGENTS.md` §12) writes the review to stdout and the session transcript to
   stderr. The PR gets stdout, in full; model and effort are read from the stderr header (`model:`,
   `reasoning effort:`). On Windows `deno test` panics inside Codex's read-only sandbox, and the review ends
@@ -39,7 +46,8 @@ opens the session.
 
 Claude's memory holds on one PC and one path only. A fact needed to work on the project, such as a decision by the
 user or a discovered trap, goes in this file or in `AGENTS.md`, not in memory: if the memory disappears, nothing
-must break.
+must break. A term of the domain goes in `GLOSSARY.md`, and the why of a hard-to-reverse decision in an ADR
+(`AGENTS.md` §11).
 
 ## Workflow
 
@@ -62,7 +70,8 @@ must break.
 6. **Stay in scope.** Do what was asked. Collateral refactors, file reshuffles, dependency upgrades and "while
    I'm at it" improvements are proposed, not carried out.
 7. **No side files.** Do not create extra READMEs, summaries, `.md` documentation or helper scripts unless
-   explicitly asked.
+   explicitly asked. `GLOSSARY.md` and the ADRs are not side files: they are written when the Decisions of the
+   issue ask for them (`AGENTS.md` §11).
 8. **Flag real problems.** If a request conflicts with `AGENTS.md` — for example it makes a violation of an
    invariant of §4.1 possible, or adds an out-of-scope capability (§1) — say so in one sentence and propose the
    alternative, instead of silently going ahead.
@@ -99,20 +108,36 @@ If a real doubt remains, ask. A wrong assumption costs more than a question.
 - Installing, removing or upgrading dependencies.
 - Modifying `deno.json`, the `Dockerfile` or the deploy configuration.
 - Any operation that writes to real services or data.
-- Any Git operation that writes: `commit`, `push`, `merge`, `rebase`, `reset`, creating a branch or a PR.
+- Any Git or GitHub operation that writes: `commit`, `push`, `merge`, `rebase`, `reset`, creating a branch, a PR
+  or an issue.
 - Deleting files or folders.
 
 <!-- TODO(template): the other changes that require confirmation, for example changing a public contract. -->
 
-Some of these rules are also enforced by `.claude/settings.json`, in every permission mode: push, PR operations,
-`reset`, `clean`, `restore` and deleting branches or stashes show a prompt to the user. The prompt adds to the
-confirmation in chat, it does not replace it. The rules match the command in the form it is written in: git
-commands that write go in the normal form, without options such as `-C` or `-c` before the subcommand. To work in
-another folder, `cd` into it and then `git push`, never `git -C folder push`.
+Some of these rules are also enforced by `.claude/settings.json`, in every permission mode: push, the `gh` commands
+that write on GitHub, PR and issue operations included, `checkout`, `switch` when it discards changes or resets a
+branch, `reset`, `clean`, `restore` and deleting branches or stashes show a prompt to the user. So does every
+`gh api` call, reads included: `gh api` turns into a write as soon as a field is passed, in more forms than a rule
+can name. The prompt adds to the confirmation in chat, it does not replace it. The rules match the command in the
+form it is written in: git commands that write go in the normal form, without options such as `-C` or `-c` before
+the subcommand, and with each option written on its own, never bundled as in `git switch -qf`, which no rule can
+match. To work in another folder, `cd` into it and then `git push`, never `git -C folder push`. For the same reason
+a `gh` write has a rule for each of its built-in aliases, such as `gh cs` for `gh codespace`: the list follows the
+help of `gh` 2.91.0, and a later `gh` that adds a write or an alias needs its rules. Git accepts any unambiguous
+prefix of a long option, such as `--dis` for `--discard-changes`, so that rule is `*--di*`, the shortest prefix.
+The PowerShell tool matches rules case-insensitively, so there the rule on `git switch -C` also prompts for
+`git switch -c`.
 
-`.env` files are neither readable nor editable, except `.env.example`: the user writes the `.env`. Every shell rule
-comes in a pair, `Bash(...)` and `PowerShell(...)`: on Windows a `deny` on Bash without its twin PowerShell rule
-silently turns off the PowerShell tool.
+`.env` files are neither readable nor editable, except `.env.example`: the user writes the `.env`. The deny rules
+cover Claude Code's file tools, the file commands it recognizes in the shell, such as `cat` and `sed`, and
+redirections. They do not cover a command that reads files without naming them, such as `grep -r pattern .`, a
+script that opens files itself, or Codex, which does not read `.claude/settings.json`. So file contents are searched
+only with the Grep tool, or with `git grep` without `--no-index` and `--no-exclude-standard`, the two options that
+make it read ignored files.
+
+Every shell rule comes in a pair, `Bash(...)` and `PowerShell(...)`: on Windows a `deny` on Bash without its twin
+PowerShell rule silently turns off the PowerShell tool, and an `ask` without its twin leaves the command unguarded
+from the other shell. `deno task invariants` checks the pairs of `ask` and `deny`.
 
 The `attribution` block of `.claude/settings.json` uses the form `"commit": "", "pr": "", "sessionUrl": false`.
 The short form `"attribution": false` requires Claude Code 2.1.281: on an earlier version it makes the file

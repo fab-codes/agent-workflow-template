@@ -35,7 +35,7 @@ command. Formatting, lint, typecheck and mechanical invariants are checked by `d
 not be reported in review.
 
 Report **only** P0 and P1 findings, each with the concrete scenario that makes it visible: input, starting state,
-effect on the data. Maintainability and style stay out: `/review` covers them (`.claude/commands/review.md`).
+effect on the data. Maintainability and style stay out: `/review` covers them (`.claude/skills/review/SKILL.md`).
 
 Every anti-pattern in §13 is at least **P1**. The following cases are **P0**, because a merge with any of them
 loses data or exposes it, each with the safe path to propose:
@@ -266,6 +266,8 @@ Rules:
 - **Tests do not access the network.** The test command has at most `--allow-env`, and `deno task invariants`
   checks it: a test cannot reach a real service, not even by mistake.
 - A test describes an observable behavior, not the implementation. The test's name says what it guarantees.
+- Expected values come from an independent source: a known literal, a worked example, the specification. A value
+  recomputed the way the code computes it makes the test pass by construction.
 - Every fixed bug comes with the test that would have caught it.
 
 ## 10. Naming
@@ -290,22 +292,75 @@ Rules:
   No decorative blocks, section banners or JSDoc that restates the signature.
 - Project documentation (`README.md`, this file) in English.
 
+### Glossary and ADRs
+
+Where each thing lives:
+
+- `AGENTS.md` holds the rules: what whoever writes must or must not do. A rule never lives only in an ADR: when a
+  decision implies a rule, the rule goes here, where every tool and Codex read it.
+- An ADR holds the why of a hard-to-reverse decision, with the alternative it rejected. It is not binding on its
+  own.
+- `GLOSSARY.md` holds the terms of the domain: what each one is, and which synonyms to avoid. No rules, no
+  implementation details, no decisions: a glossary that takes them in turns into a spec.
+- The issue holds every decision of its branch. The ADRs are the few that outlive the branch, next to the code.
+
+Before working on an area, read `GLOSSARY.md` and the ADRs that touch it, if they exist, without flagging their
+absence. Names, issue titles and test names use the term of the glossary, never a synonym listed under `_Avoid_`.
+A proposal that contradicts an ADR says so explicitly.
+
+`GLOSSARY.md` sits at the root, one for the whole project, each entry in this form:
+
+```markdown
+**Order**:
+A request from a customer for one or more products, from checkout to delivery.
+_Avoid_: Purchase, transaction
+```
+
+- One or two sentences on what the term is, not on what it does.
+- Only the project's own terms: a general programming concept, such as a timeout or an error type, stays out.
+- Subheadings when natural groups emerge, a flat list otherwise.
+- It is edited in place: removing or renaming a term is a change like any other.
+
+An ADR is `docs/adr/NNNN-slug.md`, written only when all three of these hold:
+
+1. **Hard to reverse**: changing one's mind later has a real cost.
+2. **Surprising without context**: a future reader would wonder why it was done this way.
+3. **The result of a real trade-off**: there were genuine alternatives, and one was picked for specific reasons.
+
+When one is missing there is no ADR: an easy decision gets reversed, an unsurprising one is nobody's question, and
+one with no alternative records only the obvious. The ADR is a title and one to three sentences, with no front
+matter: the context, the decision, the why. "Considered options" and "Consequences" only when they add what the
+sentences cannot.
+
+- Its number is the highest in `docs/adr/` on `origin/develop` plus one, taken at step 2 after `git fetch origin`.
+- Once merged, an ADR is never rewritten. A reversed decision is a new ADR that names the one it replaces, and the
+  old one gets a single line: `Superseded by ADR-NNNN`.
+
+Both are born lazily (§4.2): `GLOSSARY.md` with the first term and `docs/adr/` with the first ADR that the
+Decisions of an issue ask for, written at step 2 on the branch of the issue.
+
 ## 12. Development cycle and Git
 
 ### Cycle of a change
 
-1. User: asks for the change. Claude: if it is not trivial, proposes the plan and waits for the go-ahead.
-2. Claude: writes code and tests. The Stop hook runs `deno task verify` at the end of the turn.
+1. User: asks for the change. Claude: if it is not trivial, proposes the plan and waits for the go-ahead. With
+   decisions still open, the user can run `/grill-me` instead, which settles them one round of questions at a time.
+   For a bug whose cause is not known, the user can run `/diagnose`, which ends at the cause confirmed by a red
+   feedback loop. User: runs `/issue`, which writes what was agreed as an issue, or one issue per slice when the
+   change splits; for an issue already open, names it instead.
+2. Claude: with the user's go-ahead, creates the branch of the issue, then writes tests and code with `/tdd`, each
+   test seen red before the code turns it green. The Stop hook runs `deno task verify` at the end of the turn.
 3. Claude: with `verify` green, runs `/review` and shows the report.
 4. User: approves the commit. Claude: commits.
-5. Claude: runs `git fetch origin` and
+5. Claude: runs `/codex-review`, which runs `deno task verify`, then `git fetch origin` and
    `codex review -c project_doc_max_bytes=65536 -c model_reasoning_effort=xhigh --base origin/develop`,
    and shows the full output.
-6. Claude: for each P0/P1 finding, writes the test that reproduces it and then the fix, or explains why it would
-   reject it; the user decides. If the code changes, new commit and back to step 5: an outcome holds only for
-   the SHA it saw.
-7. Claude: with the user's go-ahead, push and PR to `develop`, with the **Review** section filled in.
-8. User: with CI green, merges.
+6. Claude: for each P0/P1 finding, writes the test that reproduces it, seen red on the reviewed SHA with `/tdd`,
+   and then the fix, or explains why it would reject it; the user decides. If the code changes, new commit and
+   back to step 5: an outcome holds only for the SHA it saw.
+7. User: runs `/pr`. Claude: push and PR to `develop`, with `Closes #<number>` and the **Review** section filled
+   in.
+8. User: with CI green, merges. GitHub closes the issue.
 
 The step 5 command is fixed, with no additional instructions: whoever wrote the code does not choose what the
 reviewer looks at. The two `-c` are not instructions: the first makes Codex read this file in full (Code Review
@@ -316,22 +371,43 @@ include code from other PRs.
 
 ### Rules
 
-- Branch: `feat/<number>-<short-description>` or `fix/<number>-<short-description>`, where the number is
-  sequential and matches the PR's: `feat/5-startup-config`.
-- PR title: `<number> - <description in English>`, with the same number as the branch:
-  `5 - Startup configuration validation`. No Conventional Commits prefix in the title:
-  that lives in the commit messages.
+- One issue, one branch, one PR, for every change, small ones included. The issue holds what was agreed, in the
+  sections of `.github/ISSUE_TEMPLATE/change.md`: it is where the work of a branch is read back, after a `/clear`
+  or on another PC. Its title says what changes, in English, with no number and no Conventional Commits prefix.
+- A decision taken after the issue is created, while its branch is worked, goes into the body of the issue: in
+  **Decisions**, and in **Acceptance** when it changes what is checked. Never only in a comment: `gh issue view`
+  prints the body and only the number of comments, so whoever reads the issue back would not see it. Claude
+  writes the new body to a file in the Git folder, outside the working tree, as `/issue` does, shows it to the
+  user, then updates the issue with `gh issue edit <number> --body-file <file>`.
+- Branch: `feat/<number>-<short-description>` or `fix/<number>-<short-description>`, where the number is the
+  issue's: `feat/5-startup-config`. `fix/` when the issue reports a bug. It starts from the `develop` on GitHub
+  and does not track it, because its upstream is set by the first push of `/pr`: `git fetch origin`, then
+  `git switch --no-track -c <branch> origin/develop`.
+- An issue starts only when every issue in its **Blocked by** is closed as completed: its branch starts from
+  `origin/develop`, which holds the code of a blocking issue only once its PR is merged. A blocking issue closed
+  as not planned stops the work, and the user decides whether the issue that depends on it still makes sense.
+  An issue without the section is not blocked.
+- PR title: `<number> - <title of the issue>`, with the issue's number: `5 - Startup configuration validation`.
+  No Conventional Commits prefix in the title: that lives in the commit messages.
 - Flow: branch → PR to `develop` → PR `develop` → `main`. No direct push to `develop` or `main`:
   every change goes through a PR, so CI and the independent review see it before the merge.
+- Every PR is merged with a merge commit, to `develop` and from `develop` to `main`: the repository allows no
+  other merge method. Squash and rebase merging rewrite the commits of a PR. To `develop`, they leave out of its
+  history the commit Codex reviewed, whose SHA the PR records; to `main`, they give it commits that `develop`
+  does not have, and the two branches diverge: every following PR between them carries the old commits again.
+- `develop` is the default branch on GitHub: GitHub reads `Closes #<number>` only in PRs to the default branch,
+  and with any other default the issue stays open after the merge.
 - The PR body has a **Review** section: the SHA of the last review, the model and effort that ran it, its full
   output and the outcome of every P0/P1 finding raised during the cycle. An accepted finding is closed with the
   test that reproduces it and then the fix; a rejected one, with the reason. The template is in
-  `.github/pull_request_template.md`.
+  `.github/pull_request_template.md`. CI checks that the Reviewed SHA is the head of the PR; without a ruleset a
+  red check does not block the merge.
 - A PR is merged only with CI green and every P0/P1 finding closed in the **Review** section. GitHub does not
   enforce it: this rule is the gate.
 - Commit messages in English, Conventional Commits: `feat:`, `fix:`, `refactor:`, `perf:`, `docs:`, `test:`, `chore:`.
 - One commit is one coherent change. No avalanche commits mixing refactoring and features.
-- **Do not commit, push or open PRs unless explicitly asked.** Prepare the work in the working tree and stop.
+- **Do not commit, push, open PRs or create issues unless explicitly asked.** Prepare the work in the working tree
+  and stop.
 - Never commit `.env`, credentials or dumps of real data.
 - **No AI attribution trailers, ever**, in commit messages or PR bodies.
 

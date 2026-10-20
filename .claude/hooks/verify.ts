@@ -9,19 +9,18 @@ type CommandResult = {
   readonly output: string;
 };
 
+export type CommandRunner = (
+  executable: string,
+  commandArguments: readonly string[],
+) => Promise<CommandResult>;
+
+type WorkingTreeStatus =
+  | { readonly kind: "changed" }
+  | { readonly kind: "clean" }
+  | { readonly kind: "failed"; readonly output: string };
+
 const REPOSITORY_ROOT = new URL("../../", import.meta.url);
 const MAX_COMMAND_OUTPUT_LENGTH = 8_000;
-
-const RELEVANT_PATHS = [
-  "src",
-  "tests",
-  "scripts",
-  "deno.json",
-  "deno.lock",
-  "AGENTS.md",
-  ".claude/hooks",
-  ".claude/settings.json",
-] as const;
 
 async function readHookInput(): Promise<HookInput> {
   const rawInput = await new Response(Deno.stdin.readable).text();
@@ -66,6 +65,16 @@ async function runCommand(executable: string, commandArguments: readonly string[
   }
 }
 
+// No pathspec: verify reads every folder, and a list of the relevant ones misses each folder added later.
+// --untracked-files=normal: a status.showUntrackedFiles=no in the git configuration of the PC would hide the
+// files a turn creates.
+export async function readWorkingTreeStatus(commandRunner: CommandRunner): Promise<WorkingTreeStatus> {
+  const gitStatus = await commandRunner("git", ["status", "--porcelain", "--untracked-files=normal"]);
+  if (gitStatus.code !== 0) return { kind: "failed", output: gitStatus.output };
+  if (gitStatus.output.length === 0) return { kind: "clean" };
+  return { kind: "changed" };
+}
+
 // The failure sits at the end: deno task stops at the first failing step, and the error output is appended
 // after the standard output, which holds hundreds of passing test lines.
 export function keepEnd(value: string, maximumLength: number): string {
@@ -89,16 +98,16 @@ function reportFailure(message: string, isStopHookActive: boolean): never {
 
 async function main(): Promise<void> {
   const hookInput = await readHookInput();
-  const gitStatus = await runCommand("git", ["status", "--porcelain", "--", ...RELEVANT_PATHS]);
+  const workingTree = await readWorkingTreeStatus(runCommand);
 
-  if (gitStatus.code !== 0) {
+  if (workingTree.kind === "failed") {
     reportFailure(
-      "git status failed: verification cannot determine whether relevant files changed.\n" +
-        keepEnd(gitStatus.output, MAX_COMMAND_OUTPUT_LENGTH),
+      "git status failed: verification cannot determine whether the working tree has uncommitted changes.\n" +
+        keepEnd(workingTree.output, MAX_COMMAND_OUTPUT_LENGTH),
       hookInput.isStopHookActive,
     );
   }
-  if (gitStatus.output.length === 0) return;
+  if (workingTree.kind === "clean") return;
 
   // The Definition of Done itself (AGENTS.md §3), not a copy of its steps: a copy drifts from deno.json the
   // first time a step is added there and not here.
