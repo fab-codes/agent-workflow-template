@@ -162,7 +162,7 @@ step 5: they can be added, never used in place of Codex.
 | `.github/workflows/reviewed-sha.yml`       | GitHub Actions                                          | `scripts/check-reviewed-sha.ts` on every PR to `develop` and every edit of its body |
 | `scripts/check-reviewed-sha.ts`            | `.github/workflows/reviewed-sha.yml`                    | That the Reviewed SHA of the PR body is the head of the PR                          |
 | `.github/ISSUE_TEMPLATE/change.md`         | GitHub, when an issue is opened; `/issue`               | The sections of an issue                                                            |
-| `.github/pull_request_template.md`         | GitHub, when the PR is opened                           | The layout of the Review section                                                    |
+| `.github/pull_request_template.md`         | GitHub, when the PR is opened; `/pr`                    | The layout of the Review section                                                    |
 
 ## Conventions
 
