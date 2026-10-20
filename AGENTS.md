@@ -369,6 +369,31 @@ The model stays the default of the installed CLI: a name written here would go s
 `origin/develop` because the local `develop` falls behind after every merge done on GitHub, and the review would
 include code from other PRs.
 
+### Quick lane
+
+For a small change already settled, the user can launch `/quick` in place of steps 1 to 7. Only the user launches
+it, and launching it is the go-ahead for the issue, the branch, the commit, the push and the PR of that change:
+Claude runs the cycle without stopping in between. The lane removes the stops, not the checks: `deno task verify`,
+`/review`, Codex and CI run as in the cycle above, and the merge stays the user's. The body of the issue, the name
+of the branch and the commit message take no separate confirmation: the user reads them in the PR, before the
+merge.
+
+The lane takes a change only when all four conditions hold:
+
+1. No open decision: the change is described in full at launch.
+2. Trivial, as `CLAUDE.md`, Workflow, point 2, defines it: at most three files, no change to the folder
+   structure, no change to the configuration.
+3. None of the items of "Requires explicit confirmation" in `CLAUDE.md`, apart from the Git and GitHub writes the
+   launch covers.
+4. None of the files that define the process: `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.github/`,
+   `scripts/check-invariants.ts`.
+
+Claude checks them twice, at launch on the description and before the commit on the diff, and stops only when a
+check has something to say: a condition that fails, a question of `/tdd` or of a change written directly,
+`deno task verify` still red after one retry, a finding of `/review`, a P0/P1 of Codex. It stops in the same way
+at a prompt the user denies and at a step that stops by its own rules. The lane then ends, and the work goes on in
+the normal cycle from the step where it stopped.
+
 ### Rules
 
 - One issue, one branch, one PR, for every change, small ones included. The issue holds what was agreed, in the
