@@ -49,6 +49,15 @@ const SKILL_FILENAME = "SKILL.md";
 const GH_TITLE_COMMAND = /\bgh [^`\n]*--title\b/g;
 const PATH_CONVERSION_OFF = "MSYS_NO_PATHCONV=1";
 
+// AGENTS.md §12: the skills carry the steps of the cycle. YAML forbids ": " and " #" in a value without quotes, and
+// a strict parser rejects the whole front matter, but Claude Code loads it anyway: the mistake cannot be seen
+// from Claude Code. Values in quotes, which may hold both sequences, and in brackets, which may hold ": " as the
+// argument-hint of the skills does, are left out.
+const FRONT_MATTER_DELIMITER = "---";
+const FRONT_MATTER_ENTRY = /^[\w-]+:\s+(.*)$/;
+const PLAIN_SCALAR_FORBIDDEN = [": ", " #"];
+const NOT_PLAIN_SCALAR_START = ['"', "'", "["];
+
 // AGENTS.md §12: no commit, push, PR or issue without the user's go-ahead, and .claude/settings.json backs it with
 // prompts. A shell rule binds one tool only (CLAUDE.md, "Requires explicit confirmation"): an ask rule without its
 // twin leaves the command unguarded from the other shell, and a deny on Bash alone silently turns off the
@@ -208,7 +217,21 @@ export function titleCommandLinesWithPathConversion(skillContent: string): numbe
     .map((match) => lineNumberAt(skillContent, match.index));
 }
 
-async function checkSkillTitleCommands(): Promise<Violation[]> {
+export function invalidPlainFrontMatterLines(skillContent: string): number[] {
+  const lines = skillContent.split(/\r?\n/);
+  if (lines[0] !== FRONT_MATTER_DELIMITER) return [];
+  const closingIndex = lines.indexOf(FRONT_MATTER_DELIMITER, 1);
+  if (closingIndex === -1) return [];
+
+  // The first entry sits on line 2, right after the opening delimiter.
+  return lines.slice(1, closingIndex).flatMap((text, index) => {
+    const value = FRONT_MATTER_ENTRY.exec(text)?.[1];
+    if (value === undefined || NOT_PLAIN_SCALAR_START.some((start) => value.startsWith(start))) return [];
+    return PLAIN_SCALAR_FORBIDDEN.some((sequence) => value.includes(sequence)) ? [index + 2] : [];
+  });
+}
+
+async function checkSkillFiles(): Promise<Violation[]> {
   if (!(await directoryExists(SKILLS_DIRECTORY))) return [];
 
   const violations: Violation[] = [];
@@ -230,6 +253,16 @@ async function checkSkillTitleCommands(): Promise<Violation[]> {
         rule: "§12",
         detail: `a gh command with --title must start with ${PATH_CONVERSION_OFF}, or Git Bash rewrites ` +
           `a title starting with "/" into a Windows path (CLAUDE.md, Local environment)`,
+      });
+    }
+
+    for (const line of invalidPlainFrontMatterLines(content)) {
+      violations.push({
+        file,
+        line,
+        rule: "§12",
+        detail: `a front matter value without quotes cannot hold ": " or " #": strict YAML rejects ` +
+          `the whole front matter, while Claude Code loads it anyway. Wrap the value in double quotes`,
       });
     }
   }
@@ -289,7 +322,7 @@ async function main(): Promise<void> {
   const violations: Violation[] = [
     ...(await checkTestTaskPermissions()),
     ...(await checkCodexDocumentLimit()),
-    ...(await checkSkillTitleCommands()),
+    ...(await checkSkillFiles()),
     ...(await checkShellRulePairs()),
   ];
 
