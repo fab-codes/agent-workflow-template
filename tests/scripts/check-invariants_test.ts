@@ -1,6 +1,7 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
 import {
   codexDocumentLimitProblem,
+  invalidPlainFrontMatterLines,
   titleCommandLinesWithPathConversion,
   unexpectedTestTaskArguments,
   unpairedShellRules,
@@ -117,6 +118,60 @@ Deno.test("checks a title command inside a fenced block too", () => {
   const skill = ["```bash", 'gh issue create --title "<title>" --body-file <file>', "```"].join("\n");
 
   assertEquals(titleCommandLinesWithPathConversion(skill), [2]);
+});
+
+function skillWithFrontMatter(...entries: string[]): string {
+  return ["---", ...entries, "---", "", "# Skill"].join("\n");
+}
+
+Deno.test("rejects an unquoted front matter value with a colon and a space, as the tdd description had", () => {
+  const skill = skillWithFrontMatter(
+    "description: Steps 2 and 6 of AGENTS.md §12 — test first: every Acceptance item, or Codex finding, seen red " +
+      "before the code turns it green",
+  );
+
+  assertEquals(invalidPlainFrontMatterLines(skill), [2]);
+});
+
+Deno.test("rejects an unquoted front matter value with a space and a hash, which YAML reads as a comment", () => {
+  const skill = skillWithFrontMatter("description: Review", "argument-hint: the issue #<n> of the branch");
+
+  assertEquals(invalidPlainFrontMatterLines(skill), [3]);
+});
+
+Deno.test("accepts the same values in double or single quotes, where YAML allows both sequences", () => {
+  const skill = skillWithFrontMatter(
+    'description: "Step 2 — test first: every item"',
+    "argument-hint: 'the issue #<n>: default, the branch'",
+  );
+
+  assertEquals(invalidPlainFrontMatterLines(skill), []);
+});
+
+Deno.test("accepts a bracketed value with a colon and a space, as the argument-hint of the skills", () => {
+  const skill = skillWithFrontMatter(
+    "argument-hint: [the change — default: the plan agreed in this conversation]",
+  );
+
+  assertEquals(invalidPlainFrontMatterLines(skill), []);
+});
+
+Deno.test("does not check the body of a skill, which is Markdown and not YAML", () => {
+  const skill = skillWithFrontMatter("description: Review") + "\n\nSource: the issue: its Acceptance #1.";
+
+  assertEquals(invalidPlainFrontMatterLines(skill), []);
+});
+
+Deno.test("finds the front matter of a skill checked out with CRLF line endings", () => {
+  const skill = skillWithFrontMatter("description: Review", "argument-hint: default: HEAD");
+
+  assertEquals(invalidPlainFrontMatterLines(skill.replaceAll("\n", "\r\n")), [3]);
+});
+
+Deno.test("does not take the body for front matter when the closing delimiter is missing", () => {
+  const skill = ["---", "description: Review", "", "Source: the issue: its Acceptance."].join("\n");
+
+  assertEquals(invalidPlainFrontMatterLines(skill), []);
 });
 
 Deno.test("accepts shell rules that come in their Bash and PowerShell pair", () => {

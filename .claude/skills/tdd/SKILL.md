@@ -1,5 +1,5 @@
 ---
-description: Steps 2 and 6 of AGENTS.md §12 — test first: every Acceptance item, or Codex finding, seen red before the code turns it green
+description: "Steps 2 and 6 of AGENTS.md §12 — test first: every Acceptance item, or Codex finding, seen red before the code turns it green"
 ---
 
 # TDD
