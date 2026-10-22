@@ -77,6 +77,7 @@ gh repo edit <owner>/agent-workflow-template --template --default-branch develop
 | `.claude/skills/review/SKILL.md`                                      | Ready: `/review`, maintainability and fit with the issue                        |
 | `.claude/skills/codex-review/SKILL.md`                                | Ready: `/codex-review`, the Codex review and its record                         |
 | `.claude/skills/pr/SKILL.md`                                          | Ready: `/pr`, push and PR with the Review section                               |
+| `.claude/skills/quick/SKILL.md`                                       | Ready: `/quick`, the quick lane: a small, settled change from issue to PR       |
 | `.github/ISSUE_TEMPLATE/change.md`                                    | Ready: the sections of an issue                                                 |
 | `.github/workflows/ci.yml`, `.github/pull_request_template.md`        | Ready: CI and the PR's Review section                                           |
 | `.github/workflows/reviewed-sha.yml`, `scripts/check-reviewed-sha.ts` | Ready: the CI check of the Reviewed SHA                                         |

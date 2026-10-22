@@ -62,8 +62,10 @@ must break. A term of the domain goes in `GLOSSARY.md`, and the why of a hard-to
    project invariants, and report the actual output. If something fails, say so explicitly: never round up to
    "it works".
 5. **Follow the cycle of a change**, in `AGENTS.md` §12: carry out your steps in order and stop at every step
-   that belongs to the user. The output of the independent review is shown, and reported in the PR, in full,
-   never summarized: it is the only guarantee that no finding gets filtered out by whoever wrote the code.
+   that belongs to the user. The one exception is the quick lane of §12, which the user chooses by launching
+   `/quick`: the launch is the go-ahead for the steps up to the PR, and you stop only when a check has something
+   to say. The output of the independent review is shown, and reported in the PR, in full, never summarized: it
+   is the only guarantee that no finding gets filtered out by whoever wrote the code.
    The independent review is Codex's: Claude Code's `/code-review` and `/security-review` do not replace it,
    because the judgment of the same model that wrote the code is correlated with it. They can be added as an
    extra check, never used in place of step 5.
